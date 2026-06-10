@@ -1,0 +1,278 @@
+export type SessionType = 'run' | 'strength' | 'compromised' | 'sim' | 'rest'
+export type Phase = 'aerobic' | 'build' | 'peak' | 'race'
+
+export interface TrainingSession {
+  type: SessionType
+  title: string
+  duration: string
+  detail: string
+  notes: string
+}
+
+export interface TrainingDay {
+  day: string
+  session: TrainingSession
+}
+
+export interface TrainingWeek {
+  week: number
+  phase: Phase
+  title: string
+  focus: string
+  days: TrainingDay[]
+}
+
+export const PHASE_COLORS: Record<Phase, string> = {
+  aerobic: '#2a8c5a',
+  build:   '#e8962a',
+  peak:    '#d63b2f',
+  race:    '#d63b2f',
+}
+
+export const SESSION_COLORS: Record<SessionType, { bg: string; border: string; text: string; label: string }> = {
+  run:         { bg: '#0d1f2d', border: '#4a9fd4', text: '#4a9fd4', label: 'Run' },
+  strength:    { bg: '#1a0d2d', border: '#a855f7', text: '#a855f7', label: 'Strength' },
+  compromised: { bg: '#2d0d0d', border: '#d63b2f', text: '#d63b2f', label: 'Compromised' },
+  sim:         { bg: '#2d1e00', border: '#e8962a', text: '#e8962a', label: 'Simulation' },
+  rest:        { bg: '#111111', border: '#333333', text: '#555555', label: 'Rest' },
+}
+
+export const TRAINING_PLAN: TrainingWeek[] = [
+  {
+    week:1, phase:'aerobic',
+    title:'Aerobic Foundation',
+    focus:'Zone 2 base · Station technique · Partner handover intro',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Station Intro A',duration:'50 min',
+        detail:'SkiErg 4×500m easy · Wall ball 4×25 (split 12/13 per partner) · Farmers carry 4×25m each',
+        notes:'Practice handover. Each partner does their half without a break.'}},
+      {day:'Tue',session:{type:'run',title:'Zone 2 Easy',duration:'50 min',
+        detail:'Solo or together. 5:30–5:50/km. Fully conversational.',
+        notes:'HR 130–145. Do not push above Z2.'}},
+      {day:'Wed',session:{type:'rest',title:'Active Recovery',duration:'20 min',
+        detail:'Mobility + foam roll. Hip flexors, posterior chain, calves.',notes:''}},
+      {day:'Thu',session:{type:'run',title:'Threshold Intro',duration:'35 min',
+        detail:'10 min warmup · 3×5 min at 4:50–5:00/km · 2 min Z2 between · 5 min cooldown',
+        notes:'Z3–Z4. Each partner needs to individually run 4:32/km for the 1:02 target.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest day.',notes:''}},
+      {day:'Sat',session:{type:'strength',title:'Sled Pull Focus',duration:'60 min',
+        detail:'Sled pull 6×50m each partner. Time every set. Race load.',
+        notes:'Doubles target 2:43 total. You ran 3:31. Find the 48 seconds here.'}},
+      {day:'Sun',session:{type:'run',title:'Long Easy',duration:'60 min',
+        detail:'Z2. HR <148. No pace pressure.',notes:''}},
+    ]},
+  {
+    week:2, phase:'aerobic',
+    title:'Volume + Row Work',
+    focus:'2× weekly rowing · Sled pull drill · 4 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Row Specific A',duration:'55 min',
+        detail:'Row 5×500m at 1:55–2:00/500m · Rest 90 sec · Sled pull 4×50m each partner',
+        notes:'Row target: 4:04 total = 2:02/500m per partner. You ran 4:41. Fix: pace discipline on the erg.'}},
+      {day:'Tue',session:{type:'run',title:'Intervals',duration:'40 min',
+        detail:'10 min warmup · 6×800m at 4:10–4:20/km · 90 sec jog recovery · 5 min cooldown',
+        notes:'Z4–Z5. Faster than race pace — builds overhead.'}},
+      {day:'Wed',session:{type:'rest',title:'Active Recovery',duration:'20 min',
+        detail:'Easy walk + calf/hip mobility.',notes:''}},
+      {day:'Thu',session:{type:'run',title:'Tempo Run',duration:'40 min',
+        detail:'10 min Z2 warmup · 20 min at 4:50–5:00/km · 10 min Z2 cooldown',
+        notes:'Z3–Z4. Steady state. Do not race it.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'strength',title:'Full Station Drill',duration:'65 min',
+        detail:'All 8 stations in order. Each partner alternates. No running. Time everything.',
+        notes:'Benchmark session. Record total time — compare at Weeks 4 and 8.'}},
+      {day:'Sun',session:{type:'run',title:'Long Easy',duration:'70 min',
+        detail:'Z2 only. HR cap 148.',notes:''}},
+    ]},
+  {
+    week:3, phase:'aerobic',
+    title:'Threshold Development',
+    focus:'Longer threshold blocks · Wall ball rhythm · Row intervals',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Row + Wall Ball A',duration:'60 min',
+        detail:'Row 3×1000m at 2:00/500m splits · Wall ball 5×25 reps — drill breathing rhythm',
+        notes:'Wall ball target 3:44 = 100 reps at 26.7/min. 1 rep every 2.2 sec. Drill that rhythm.'}},
+      {day:'Tue',session:{type:'run',title:'1km Repeats',duration:'45 min',
+        detail:'10 min warmup · 5×1km at 4:25–4:35/km · 2 min rest · 5 min cooldown',
+        notes:'Z4. Race pace minus 5 sec/km. Builds confidence at speed.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'run',title:'Threshold Run',duration:'45 min',
+        detail:'10 min warmup · 25 min at 4:45–4:55/km continuous · 10 min cooldown',
+        notes:'Z3–Z4. The 25 min continuous block is the key stimulus.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'strength',title:'Sled Pull + Lunges',duration:'60 min',
+        detail:'Sled pull 6×50m per partner race load · Sandbag lunge 4×50m each · SkiErg 3×1000m',
+        notes:'Sled pull: time every set. Target sub-1:20 per 50m per partner.'}},
+      {day:'Sun',session:{type:'run',title:'Long Easy',duration:'75 min',
+        detail:'Z2 only. Build duration.',notes:''}},
+    ]},
+  {
+    week:4, phase:'aerobic',
+    title:'First Compromised Session',
+    focus:'Partner brick intro · VO2 work · 4–5 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Station Velocity',duration:'55 min',
+        detail:'SkiErg 4×500m fast (1:55) · BBJ 4×12 · Farmers carry 4×25m each · Sled push 4×50m race load',
+        notes:'Quality. Note split times — compare at Week 8.'}},
+      {day:'Tue',session:{type:'run',title:'VO2 Max Intervals',duration:'40 min',
+        detail:'10 min warmup · 8×400m at 3:55–4:05/km · 60 sec rest · 5 min cooldown',
+        notes:'Z5. Short and controlled-hard.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'First Partner Brick',duration:'45 min',
+        detail:'3 rounds: Both run 1km at 4:35/km → Wall balls 50 reps each → Sled pull 50m each. Rest 3 min.',
+        notes:'KEY: practice seamless handover at sled pull. Dead time at changeover = free time lost.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'strength',title:'Full 8-Station Run-Through',duration:'70 min',
+        detail:'All 8 stations at 70% intensity in race order. Both partners alternating. Measure total time.',
+        notes:'Station benchmark. Record it.'}},
+      {day:'Sun',session:{type:'run',title:'Long Easy',duration:'80 min',
+        detail:'Last long Z2 before Phase 2 intensity picks up.',notes:''}},
+    ]},
+  {
+    week:5, phase:'build',
+    title:'Race Specificity Begins',
+    focus:'Compromised runs 2×/week · Race-pace running · 5 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Row + Sled Pull Power',duration:'60 min',
+        detail:'Row 5×500m at 1:55/500m · Sled pull 5×50m per partner race load · Sandbag lunges 4×50m',
+        notes:'Row and sled pull are your two biggest station deficits. Weekly focus.'}},
+      {day:'Tue',session:{type:'run',title:'Race Pace 1km Repeats',duration:'55 min',
+        detail:'10 min warmup · 6×1km at 4:32–4:35/km · 90 sec rest · 5 min cooldown',
+        notes:'This is your Doubles target pace. Should feel hard but sustainable.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. Sleep priority.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'Partner Brick A',duration:'50 min',
+        detail:'4 rounds: Both run 1km at 4:35/km → Row 500m each → Sled pull 50m each. Rest 2 min.',
+        notes:'Time each round. Watch for drift. Seamless sled handover — no dead time.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'compromised',title:'Partner Brick B',duration:'55 min',
+        detail:'4 rounds: Both run 1km at 4:35/km → Wall balls 50 each → Sandbag lunges 50m each. Rest 2 min.',
+        notes:'Focus on wall ball breathing rhythm. Keep moving — do not break the set.'}},
+      {day:'Sun',session:{type:'run',title:'Long Easy',duration:'70 min',
+        detail:'Z2 recovery from two compromised sessions.',notes:''}},
+    ]},
+  {
+    week:6, phase:'build',
+    title:'Partial Simulation',
+    focus:'First 4-station partner sim · Longer threshold · 5 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Station Deficit Day',duration:'65 min',
+        detail:'Sled pull 6×50m each (race load, timed) · Row 4×1000m at 2:00/500m · SkiErg 3×1000m',
+        notes:'Full focus on your three biggest deficits. Track improvement from Week 2.'}},
+      {day:'Tue',session:{type:'run',title:'Threshold + Speed',duration:'50 min',
+        detail:'10 min warmup · 15 min at 4:45/km · 2 min walk · 4×400m at 3:55/km · 5 min cooldown',
+        notes:'Z3–Z5. Mixed quality session.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'Partner Brick C — Long',duration:'60 min',
+        detail:'5 rounds: Both run 1km at 4:32/km → 1 station rotating (sled pull/row/wall balls/lunges/ski). Rest 90 sec.',
+        notes:'Race pace running. 5 rounds = half race load. Last 2 rounds are mental — push through together.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'sim',title:'Half-Race Sim (Stations 1–4)',duration:'~30 min',
+        detail:'4×1km run (both partners) alternating with: SkiErg 1000m · Sled Push 50m · Sled Pull 50m · Burpee BJ 80m.',
+        notes:'Full race conditions and loads. Target sub-26 min total.'}},
+      {day:'Sun',session:{type:'run',title:'Easy Recovery',duration:'45 min',
+        detail:'Z2 post-sim flush.',notes:''}},
+    ]},
+  {
+    week:7, phase:'build',
+    title:'Peak Volume Week',
+    focus:'Highest weekly load · 60-min EMOM · 5–6 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Heavy Station Day',duration:'70 min',
+        detail:'Sled pull 7×50m per partner race load · Sled push 5×50m · Sandbag lunges 5×50m each · SkiErg 4×1000m',
+        notes:'Total station volume day. Time everything. Compare to Week 3.'}},
+      {day:'Tue',session:{type:'run',title:'8×1km Race Repeats',duration:'60 min',
+        detail:'10 min warmup · 8×1km at 4:32–4:35/km · 90 sec rest · 5 min cooldown',
+        notes:'Full Hyrox run distance at race pace. Landmark session. Both partners.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. 8+ hrs sleep.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'60-min Partner EMOM',duration:'60 min',
+        detail:'EMOM 60 min rotating: Both run 1km · Wall balls 50 each · Sled pull 50m each · Row 500m each · Farmers carry 50m.',
+        notes:'Mental toughness session. The cliff hits at minute 45. Push through together.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'sim',title:'Half-Race Sim (Stations 5–8)',duration:'~30 min',
+        detail:'4×1km run alternating with: Row 1000m · Farmers Carry 200m · Sandbag Lunges 100m · Wall Balls 100 reps.',
+        notes:'Compare running splits to Week 6 sim. Both partners tracking.'}},
+      {day:'Sun',session:{type:'run',title:'Easy Long',duration:'60 min',
+        detail:'Z2 flush after peak week.',notes:''}},
+    ]},
+  {
+    week:8, phase:'build',
+    title:'Race Pace Consolidation',
+    focus:'Maintain intensity · Volume drops 15% · 5 sessions',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Station Velocity B',duration:'55 min',
+        detail:'Wall balls 5×25 each (60 sec rest — time each set) · SkiErg 4×500m at 1:50 · Sled pull 4×50m timed',
+        notes:'Quality over volume. Note improvements vs Week 2 benchmarks.'}},
+      {day:'Tue',session:{type:'run',title:'Tempo Intervals',duration:'50 min',
+        detail:'10 min warmup · 3×10 min at 4:40–4:45/km · 2 min easy between · 5 min cooldown',
+        notes:'Z3–Z4. Strong threshold block. Do not race it.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'Partner Brick D — Full Race Prep',duration:'55 min',
+        detail:'6 rounds: Both run 1km at 4:32/km → 1 station rotating through all 8. Rest 90 sec.',
+        notes:'Seamless handovers. Run 1 hard cap 4:38/km. Do not go out too fast.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. High-carb day.',notes:''}},
+      {day:'Sat',session:{type:'sim',title:'6-Station Simulation (75%)',duration:'~45 min',
+        detail:'6×1km both partners + 6 stations (drop sled push and BBJ). Race effort.',
+        notes:'Target sub-44 min. Build race-day confidence.'}},
+      {day:'Sun',session:{type:'run',title:'Easy Recovery',duration:'40 min',
+        detail:'Z2. Heading into peak week.',notes:''}},
+    ]},
+  {
+    week:9, phase:'peak',
+    title:'Full Race Simulation',
+    focus:'Complete Doubles sim · Sharpen intensity · 5 sessions',
+    days:[
+      {day:'Mon',session:{type:'run',title:'Sharp Intervals',duration:'40 min',
+        detail:'10 min warmup · 10×400m at 3:50/km · 60 sec rest · 5 min cooldown',
+        notes:'Z5. Pure speed stimulus.'}},
+      {day:'Tue',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. Save everything for Saturday.',notes:''}},
+      {day:'Wed',session:{type:'strength',title:'Station Sharpener',duration:'20 min MAX',
+        detail:'All 8 stations × 40% race reps at race pace. Both partners. No fatigue.',
+        notes:'Neural prep only. 20 min max.'}},
+      {day:'Thu',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. High-carb day.',notes:''}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'20 min walk only. Legs completely fresh.',notes:''}},
+      {day:'Sat',session:{type:'sim',title:'FULL RACE SIMULATION',duration:'~65 min',
+        detail:'All 8 stations. All 8 runs. Both partners. Race loads. Race pace. Time every segment.',
+        notes:'Target 1:02–1:04 total. This is your dress rehearsal. Race day protocol: pre-race nutrition, warm-up, race kit.'}},
+      {day:'Sun',session:{type:'run',title:'Easy Flush',duration:'30 min',
+        detail:'Z1–Z2 only. Very easy. Legs recovery.',notes:''}},
+    ]},
+  {
+    week:10, phase:'peak',
+    title:'Taper Week 1',
+    focus:'Volume -30% · Keep intensity · Rest legs',
+    days:[
+      {day:'Mon',session:{type:'strength',title:'Station Sharpener',duration:'35 min',
+        detail:'All 8 stations × 50% race reps at race pace. Both partners. No fatigue.',
+        notes:'Feel sharp and fast. Not tired.'}},
+      {day:'Tue',session:{type:'run',title:'Short Race Pace',duration:'35 min',
+        detail:'10 min warmup · 4×1km at 4:32/km · 90 sec rest · 5 min cooldown',
+        notes:'Stay sharp. Short and fast.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'compromised',title:'Short Partner Brick',duration:'35 min',
+        detail:'3 rounds: 1km at 4:32/km → 1 station alternating. Rest 2 min.',
+        notes:'Feel race-ready. Remind legs of the pattern.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Sat',session:{type:'run',title:'Easy 30',duration:'30 min',
+        detail:'Z2 easy jog. Keep legs moving.',notes:''}},
+      {day:'Sun',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+    ]},
+  {
+    week:11, phase:'peak',
+    title:'Taper Week 2',
+    focus:'Volume -50% · Feel fresh · Race-day prep',
+    days:[
+      {day:'Mon',session:{type:'run',title:'Easy Run',duration:'25 min',
+        detail:'Z2. Very easy. Just keep legs ticking over.',notes:''}},
+      {day:'Tue',session:{type:'strength',title:'Race Preview',duration:'20 min',
+        detail:'3 reps of each station. Race pace only. No fatigue.',
+        notes:'Muscle memory, not training load.'}},
+      {day:'Wed',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest.',notes:''}},
+      {day:'Thu',session:{type:'run',title:'Activation Run',duration:'20 min',
+        detail:'Easy jog + 4×100m strides at race pace.',notes:'Strides keep fast-twitch fibres online.'}},
+      {day:'Fri',session:{type:'rest',title:'Rest',duration:'',detail:'Full rest. Carb load. Early night.',notes:''}},
+      {day:'Sat',session:{type:'rest',title:'Race Day Eve',duration:'',detail:'Gear check. Nutrition sorted. Light walk only.',notes:''}},
+      {day:'Sun',session:{type:'race' as SessionType,title:'CAPE TOWN — RACE DAY',duration:'Target 1:02:00',
+        detail:'Warm up 15 min. Start controlled. Run 1 at 4:35/km — do not go out at 4:20. Trust the plan.',
+        notes:'You have done the work. Attack the sled pull. Row at 2:00/500m. Wall balls: unbroken.'}},
+    ]},
+]
