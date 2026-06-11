@@ -41,6 +41,29 @@ function TimeInput({ seconds, onCommit }: { seconds: number; onCommit: (s: numbe
   )
 }
 
+// Number field with isolated draft state so typing isn't blocked by validation.
+function NumberInput({
+  value, min, max, onCommit, style: extraStyle,
+}: { value: number; min: number; max: number; onCommit: (n: number) => void; style?: React.CSSProperties }) {
+  const [draft, setDraft] = useState(String(value))
+  useEffect(() => { setDraft(String(value)) }, [value])
+  return (
+    <input
+      type="number" min={min} max={max}
+      value={draft}
+      onChange={e => {
+        setDraft(e.target.value)
+        const v = parseInt(e.target.value, 10)
+        if (!isNaN(v) && v >= min && v <= max) onCommit(v)
+      }}
+      onBlur={() => {
+        const v = parseInt(draft, 10)
+        if (isNaN(v) || v < min || v > max) setDraft(String(value))
+      }}
+      style={extraStyle}
+    />
+  )
+}
 const GROUP_LABELS: Record<Equipment['group'], string> = {
   hyrox: 'Hyrox machines', free: 'Free weights', accessory: 'Accessories',
 }
@@ -153,11 +176,10 @@ export default function Settings({ profile, setProfile }: Props) {
           <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: '0 0 auto' }}>
               <label style={fieldLabel}>Max Heart Rate (bpm)</label>
-              <input
-                type="number" min={120} max={220}
+              <NumberInput
+                value={profile.maxHR} min={120} max={220}
+                onCommit={v => update({ maxHR: v })}
                 style={{ ...inputStyle, width: 100, fontFamily: 'monospace', textAlign: 'center' }}
-                value={profile.maxHR}
-                onChange={e => { const v = parseInt(e.target.value); if (v >= 120 && v <= 220) update({ maxHR: v }) }}
               />
             </div>
             <div style={{ fontSize: 11, color: '#555', lineHeight: 1.6, paddingBottom: 2 }}>
