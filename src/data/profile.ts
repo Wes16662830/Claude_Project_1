@@ -179,7 +179,7 @@ export const STATION_LABELS: Record<StationId, string> = {
 // Default segments (Wesley + Glenn, Johannesburg 2026)
 // ---------------------------------------------------------------------------
 export const DEFAULT_SEGMENTS: SegmentSplit[] = [
-  { id:'running',    label:'Running',        type:'run',     actualSeconds:301, targetSeconds:272, note:'avg/km across all 8 runs' },
+  { id:'running',    label:'Running',        type:'run',     actualSeconds:280, targetSeconds:272, note:'avg/km across all 8 runs' },
   { id:'skierg',     label:'SkiErg',         type:'station', actualSeconds:234, targetSeconds:221, note:'1000m' },
   { id:'sled_push',  label:'Sled Push',      type:'station', actualSeconds:87,  targetSeconds:93,  note:'50m — beat this ✓' },
   { id:'sled_pull',  label:'Sled Pull',      type:'station', actualSeconds:211, targetSeconds:163, note:'50m — biggest station deficit' },
