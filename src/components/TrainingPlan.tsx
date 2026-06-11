@@ -68,9 +68,13 @@ function ScaledBar({ pct, color }: { pct: number; color: string }) {
   )
 }
 
-interface Props { profile: Profile }
+interface Props {
+  profile: Profile
+  completed: Set<string>
+  onToggleComplete: (id: string) => void
+}
 
-export default function TrainingPlan({ profile }: Props) {
+export default function TrainingPlan({ profile, completed, onToggleComplete }: Props) {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set([1]))
   const division = getDivision(profile.division)
   const fitness = getFitnessLevel(profile.fitnessLevel)
@@ -340,7 +344,7 @@ export default function TrainingPlan({ profile }: Props) {
             {open && (
               <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, padding: '0 20px 16px' }}>
-                {week.days.map(d => {
+                {week.days.map((d, dayIdx) => {
                   const s = d.session
                   const rawType = s.type as string
                   const type: SessionType = rawType === 'race' ? 'sim' : s.type
@@ -357,15 +361,36 @@ export default function TrainingPlan({ profile }: Props) {
                   const hasStationLoads = !isRunSession && (s.stations ?? []).some(
                     id => ['wall_balls','farmers','s_lunges','sled_push','sled_pull'].includes(id)
                   )
+                  const sessionId = `w${week.week}_d${dayIdx}`
+                  const isDone = completed.has(sessionId)
 
                   return (
                     <div key={d.day} style={{
                       ...dayCardStyle(type),
                       ...(isRace ? { borderColor: '#e8962a', background: '#2d1e00' } : {}),
+                      ...(isDone ? { opacity: 0.75, borderColor: '#2a8c5a55' } : {}),
+                      position: 'relative',
                     }}>
-                      {/* Day + Hyrox type badge */}
+                      {/* Day + Hyrox type badge + Done toggle */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>{d.day}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>{d.day}</div>
+                          {!isRest && (
+                            <button
+                              onClick={() => onToggleComplete(sessionId)}
+                              title={isDone ? 'Mark undone' : 'Mark done'}
+                              style={{
+                                background: isDone ? '#2a8c5a' : 'transparent',
+                                border: `1px solid ${isDone ? '#2a8c5a' : '#333'}`,
+                                borderRadius: 4, padding: '1px 6px', cursor: 'pointer',
+                                fontSize: 10, fontWeight: 700, color: isDone ? '#fff' : '#555',
+                                transition: 'all 0.15s',
+                              }}
+                            >
+                              {isDone ? '✓ Done' : '○'}
+                            </button>
+                          )}
+                        </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
                           {s.workoutType && <div style={workoutTypeBadge(s.workoutType)}>{WORKOUT_TYPE_LABEL[s.workoutType]}</div>}
                           {isRace && <div style={{ ...workoutTypeBadge('complete'), background: '#e8962a' }}>RACE DAY</div>}

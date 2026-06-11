@@ -1,17 +1,20 @@
 import React from 'react'
 import { fmtTime } from '../data/raceData'
 import { getDivision, type Profile } from '../data/profile'
+import type { PartnerSnapshot } from '../data/progress'
 
 interface HeaderProps {
   activeTab: string
   onTabChange: (tab: string) => void
   profile: Profile
+  partner: PartnerSnapshot | null
 }
 
 const TABS = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'plan', label: 'Training Plan' },
   { id: 'analysis', label: 'Split Analysis' },
+  { id: 'partner', label: 'Partner' },
   { id: 'settings', label: 'Settings' },
 ]
 
@@ -49,7 +52,7 @@ function tabStyle(active: boolean): React.CSSProperties {
   }
 }
 
-export default function Header({ activeTab, onTabChange, profile }: HeaderProps) {
+export default function Header({ activeTab, onTabChange, profile, partner }: HeaderProps) {
   const division = getDivision(profile.division)
   const first = (name: string) => name.trim().split(' ')[0] || name
   const title = profile.athlete2.trim()
@@ -80,6 +83,9 @@ export default function Header({ activeTab, onTabChange, profile }: HeaderProps)
         {TABS.map(t => (
           <button key={t.id} style={tabStyle(activeTab === t.id)} onClick={() => onTabChange(t.id)}>
             {t.label}
+            {t.id === 'partner' && partner && (
+              <span style={{ display: 'inline-block', width: 6, height: 6, borderRadius: '50%', background: '#2a8c5a', marginLeft: 5, verticalAlign: 'middle', marginBottom: 1 }} />
+            )}
           </button>
         ))}
       </nav>
