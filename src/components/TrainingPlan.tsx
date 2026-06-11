@@ -5,7 +5,7 @@ import {
 } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
-  resolveStation, getDivision, getFitnessLevel, STATION_LABELS,
+  resolveStation, getDivision, getFitnessLevel, getStationLoads, STATION_LABELS,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { fmtTime } from '../data/raceData'
@@ -102,17 +102,14 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
   const hrZ4 = [Math.round(maxHR * 0.80), Math.round(maxHR * 0.90)]
   const hrZ5 = [Math.round(maxHR * 0.90), maxHR]
 
-  // Race station loads (kg) for the user's division, scaled by fitness level
-  const isMenDiv = profile.division.includes('men')
-  const baseWB = isMenDiv ? 9 : 6
-  const baseFarmers = isMenDiv ? 24 : 16
-  const baseLunges = isMenDiv ? 20 : 10
-  const baseSled = isMenDiv ? 102 : 78
+  // Race station loads — official Hyrox loads for the user's division, scaled by fitness level
+  const baseLoads = getStationLoads(profile.division)
   const loads = {
-    wall_balls: +(baseWB      * fitness.loadPct).toFixed(1),
-    farmers:    Math.round(baseFarmers * fitness.loadPct),
-    s_lunges:   Math.round(baseLunges  * fitness.loadPct),
-    sled:       Math.round(baseSled    * fitness.loadPct / 5) * 5,
+    wall_balls: +(baseLoads.wall_balls * fitness.loadPct).toFixed(1),
+    farmers:    Math.round(baseLoads.farmers   * fitness.loadPct),
+    s_lunges:   Math.round(baseLoads.s_lunges  * fitness.loadPct),
+    sled_push:  Math.round(baseLoads.sled_push * fitness.loadPct / 5) * 5,
+    sled_pull:  Math.round(baseLoads.sled_pull * fitness.loadPct / 5) * 5,
   }
 
   // Derive which pace zone a run session is primarily targeting
@@ -242,7 +239,8 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
               Wall Balls <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.wall_balls}kg</span><br />
               Farmers <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.farmers}kg</span>/hand<br />
               Lunges bag <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.s_lunges}kg</span><br />
-              Sled <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.sled}kg</span>
+              Sled Push <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.sled_push}kg</span><br />
+              Sled Pull <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.sled_pull}kg</span>
             </div>
           </div>
         </div>
@@ -455,10 +453,11 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                           fontSize: 10, color: '#888', lineHeight: 1.8,
                         }}>
                           <span style={{ fontSize: 9, fontWeight: 800, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: 4 }}>Your Loads</span>
-                          {(s.stations ?? []).includes('wall_balls')  && <span style={{ marginRight: 10 }}>Wall Balls <b style={{ color: '#f0ede8' }}>{loads.wall_balls}kg</b></span>}
-                          {(s.stations ?? []).includes('farmers')     && <span style={{ marginRight: 10 }}>Farmers <b style={{ color: '#f0ede8' }}>{loads.farmers}kg</b>/hand</span>}
-                          {(s.stations ?? []).includes('s_lunges')    && <span style={{ marginRight: 10 }}>Lunges bag <b style={{ color: '#f0ede8' }}>{loads.s_lunges}kg</b></span>}
-                          {((s.stations ?? []).includes('sled_push') || (s.stations ?? []).includes('sled_pull')) && <span>Sled <b style={{ color: '#f0ede8' }}>{loads.sled}kg</b></span>}
+                          {(s.stations ?? []).includes('wall_balls') && <span style={{ marginRight: 10 }}>Wall Balls <b style={{ color: '#f0ede8' }}>{loads.wall_balls}kg</b></span>}
+                          {(s.stations ?? []).includes('farmers')    && <span style={{ marginRight: 10 }}>Farmers <b style={{ color: '#f0ede8' }}>{loads.farmers}kg</b>/hand</span>}
+                          {(s.stations ?? []).includes('s_lunges')   && <span style={{ marginRight: 10 }}>Lunges bag <b style={{ color: '#f0ede8' }}>{loads.s_lunges}kg</b></span>}
+                          {(s.stations ?? []).includes('sled_push')  && <span style={{ marginRight: 10 }}>Sled Push <b style={{ color: '#f0ede8' }}>{loads.sled_push}kg</b></span>}
+                          {(s.stations ?? []).includes('sled_pull')  && <span>Sled Pull <b style={{ color: '#f0ede8' }}>{loads.sled_pull}kg</b></span>}
                         </div>
                       )}
 

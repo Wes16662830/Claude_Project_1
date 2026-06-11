@@ -176,6 +176,35 @@ export const STATION_LABELS: Record<StationId, string> = {
 }
 
 // ---------------------------------------------------------------------------
+// Station loads per division — official Hyrox loads
+// Wall ball: Open = 4kg, Pro Men = 6kg, Pro Women = 4kg
+// Sled push/pull are different loads (push is heavier than pull)
+// ---------------------------------------------------------------------------
+export interface StationLoads {
+  wall_balls: number   // kg
+  farmers: number      // kg per hand
+  s_lunges: number     // kg (sandbag)
+  sled_push: number    // kg (including sled)
+  sled_pull: number    // kg (including sled)
+}
+
+const DIVISION_LOADS: Record<DivisionId, StationLoads> = {
+  open_doubles_men:   { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+  open_doubles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 78,  sled_pull: 56  },
+  pro_doubles_men:    { wall_balls: 6,  farmers: 32, s_lunges: 30, sled_push: 152, sled_pull: 102 },
+  mixed_doubles:      { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+  open_singles_men:   { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+  open_singles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 78,  sled_pull: 56  },
+  pro_singles_men:    { wall_balls: 6,  farmers: 32, s_lunges: 30, sled_push: 152, sled_pull: 102 },
+  pro_singles_women:  { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+  relay:              { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+}
+
+export function getStationLoads(divisionId: DivisionId): StationLoads {
+  return DIVISION_LOADS[divisionId] ?? DIVISION_LOADS.open_doubles_men
+}
+
+// ---------------------------------------------------------------------------
 // Default segments (Wesley + Glenn, Johannesburg 2026)
 // ---------------------------------------------------------------------------
 export const DEFAULT_SEGMENTS: SegmentSplit[] = [
