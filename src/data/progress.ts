@@ -31,13 +31,16 @@ export interface PartnerSnapshot {
   u: number    // updatedAt (ms since epoch)
 }
 
+// btoa only handles Latin-1; use encodeURIComponent to make it Unicode-safe.
 export function encodeSnapshot(snap: PartnerSnapshot): string {
-  return btoa(JSON.stringify(snap))
+  try {
+    return btoa(encodeURIComponent(JSON.stringify(snap)))
+  } catch { return '' }
 }
 
 export function decodeSnapshot(code: string): PartnerSnapshot | null {
   try {
-    return JSON.parse(atob(code.trim())) as PartnerSnapshot
+    return JSON.parse(decodeURIComponent(atob(code.trim()))) as PartnerSnapshot
   } catch { return null }
 }
 
