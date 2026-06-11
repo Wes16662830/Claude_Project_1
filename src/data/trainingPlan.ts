@@ -7,12 +7,13 @@ export type WorkoutType = 'engine' | 'foundation' | 'complete' | 'aerobic' | 'po
 export interface TrainingSession {
   type: SessionType
   workoutType?: WorkoutType
-  format?: string            // e.g. "5 RFT", "AMRAP 20 min", "Tabata × 3"
+  format?: string
   title: string
   duration: string
   detail: string
   notes: string
-  soloNotes?: string         // shown when trainingMode === 'solo'
+  soloNotes?: string
+  optional?: boolean         // renders with OPTIONAL badge — user can skip
   stations?: StationId[]
 }
 
@@ -27,6 +28,7 @@ export interface TrainingWeek {
   weekTheme: string
   title: string
   focus: string
+  gymSession?: TrainingSession  // optional upper/lower body physique day
   days: TrainingDay[]
 }
 
@@ -64,6 +66,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:1, phase:'aerobic', weekTheme:'BASE',
     title:'Aerobic Foundation',
     focus:'Station technique · Zone 2 base · Fartlek intro',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Push + Pull Supersets',
+      title:'Upper Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Bench Press or Push-ups × 8-10 reps / Barbell or DB Row × 10-12 per arm · Superset B × 3 (90s rest): DB Shoulder Press × 10 / Pull-ups × max (or Band pull-aparts × 20) · Finisher: 3 × 15 Face Pulls + 2 × 45s Plank',
+      notes:'Hypertrophy focus — 65–75% of 1RM, 3s eccentric. Do on Wednesday or Friday; not the day before a long run. Keep to 45 min. This maintains upper body muscle through the Hyrox block.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'AMRAP 15 min',
         title:'Station Intro Circuit',duration:'~40 min',
@@ -99,6 +108,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:2, phase:'aerobic', weekTheme:'BUILD',
     title:'Volume + Row Engine',
     focus:'Pyramid row sets · Odd/Even EMOM · Benchmark session',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Squat + Hinge Supersets',
+      title:'Lower Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Back Squat or Goblet Squat × 6-8 / Romanian Deadlift × 8-10 · Superset B × 3 (90s rest): Bulgarian Split Squat × 8 per leg / Hip Thrust (BB or KB) × 15 · Finisher: 3 × 15 Single-leg Calf Raise',
+      notes:'Moderate load — legs need to function next session. Full ROM, control the eccentric. Build a pump, not a grind. If legs feel dead going in, push this session later in the week.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'Row Pyramid + Sled',
         title:'Row Pyramid + Sled Pull',duration:'55 min',
@@ -135,6 +151,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:3, phase:'aerobic', weekTheme:'BASE',
     title:'Threshold Development',
     focus:'Station Chipper · Longer threshold blocks · Pyramid strength',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Push + Pull Supersets',
+      title:'Upper Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Bench Press or Push-ups × 8-10 / Barbell or DB Row × 10-12 per arm · Superset B × 3 (90s rest): DB Shoulder Press × 10 / Pull-ups × max (or Band pull-aparts × 20) · Finisher: 3 × 15 Face Pulls + 2 × 45s Plank',
+      notes:'Aim to add 2.5–5kg to Week 1 weights if technique was clean. Keep the 3s eccentric — this is where the growth stimulus is, not the concentric.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'Station Chipper',
         title:'Race Station Chipper',duration:'55 min',
@@ -169,6 +192,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:4, phase:'aerobic', weekTheme:'GROW',
     title:'First Compromised Session',
     focus:'Superset EMOM · VO2 intervals · Partner brick intro',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Squat + Hinge Supersets',
+      title:'Lower Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Back Squat or Goblet Squat × 6-8 / Romanian Deadlift × 8-10 · Superset B × 3 (90s rest): Bulgarian Split Squat × 8 per leg / Hip Thrust (BB or KB) × 15 · Finisher: 3 × 15 Single-leg Calf Raise',
+      notes:'Do this on Wednesday — not Thursday (brick day). Progress weight from Week 2 if form was solid. Hip thrusts are critical for sled push power — go heavy on these.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'power',format:'Superset EMOM × 16',
         title:'Sled / Speed Superset',duration:'55 min',
@@ -205,6 +235,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:5, phase:'build', weekTheme:'PACE',
     title:'Race Specificity Begins',
     focus:'AMRAP station · Race-pace runs · Pace Ladder brick',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Push + Pull Supersets',
+      title:'Upper Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Bench Press or Push-ups × 6-8 (heavier) / Barbell or DB Row × 8-10 per arm · Superset B × 3 (90s rest): DB Shoulder Press × 8 / Pull-ups × max weighted (or bodyweight × max) · Finisher: 3 × 15 Face Pulls + 3 × 30s L-sit or Hollow Hold',
+      notes:'Week 5 — push the strength. Go slightly heavier than Week 3 on compound lifts. Weighted pull-ups if you can do 8+ bodyweight reps. Core finisher swaps to L-sit/hollow for isometric strength.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'AMRAP 20 min',
         title:'Station AMRAP',duration:'35 min + warmup',
@@ -241,6 +278,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:6, phase:'build', weekTheme:'PUSH',
     title:'Partial Simulation',
     focus:'Deficit supersets · First 4-station sim · Longer threshold',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Squat + Hinge Supersets',
+      title:'Lower Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Back Squat or Goblet Squat × 5 (heavy) / Romanian Deadlift × 6-8 (heavy) · Superset B × 3 (90s rest): Bulgarian Split Squat × 8 per leg / Hip Thrust × 12 (heavy) · Finisher: 3 × 12 Nordic Curl (or slow negative) + 3 × 15 Calf Raise',
+      notes:'Heaviest lower body week — push the squat and hip thrust this session. Nordic curls protect the hamstrings in high-running weeks. Do this Wednesday, not the day before the sim on Saturday.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'Superset Clusters',
         title:'Station Deficit Supersets',duration:'65 min',
@@ -277,6 +321,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:7, phase:'build', weekTheme:'GRIND',
     title:'Peak Volume Week',
     focus:'Station Ladder · Race-distance run · 60-min EMOM',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Push + Pull (Deload Loads)',
+      title:'Upper Body — Peak Week',duration:'35 min',
+      detail:'3 × 10 Bench Press or Push-ups (70% of W5 load) · 3 × 10 DB Row per arm · 2 × 10 Shoulder Press · 2 × max Pull-ups · 3 × 45s Plank',
+      notes:'Peak training week — keep gym work lighter than usual. Volume stays the same, load drops 20–30%. Purpose is to maintain stimulus without adding recovery debt on top of the hardest Hyrox week.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'power',format:'Station Ladder',
         title:'Race Station Ladder',duration:'70 min',
@@ -313,6 +364,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:8, phase:'build', weekTheme:'PACE',
     title:'Race Pace Consolidation',
     focus:'Odd/Even EMOM · E2MOM sled sprint · AMRAP repeat · Volume -15%',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Squat + Hinge Supersets',
+      title:'Lower Body Strength',duration:'40–45 min',
+      detail:'Superset A × 4 (2 min rest): Back Squat × 6-8 (match W6 load) / Romanian Deadlift × 8 · Superset B × 3 (90s rest): Bulgarian Split Squat × 8 per leg / Hip Thrust × 15 · Finisher: 3 × 12 Nordic Curl + 3 × 20 Calf Raise',
+      notes:'Last heavy lower body session before taper begins. Match Week 6 loads — no PBs this week. Nordic curls important: hamstring protection going into the highest-running phase.',
+    },
     days:[
       {day:'Mon',session:{type:'strength',workoutType:'foundation',format:'Odd/Even EMOM × 20',
         title:'Station EMOM Repeat',duration:'50 min',
@@ -384,6 +442,13 @@ export const TRAINING_PLAN: TrainingWeek[] = [
     week:10, phase:'peak', weekTheme:'ACCELERATE',
     title:'Taper Week 1',
     focus:'Volume -30% · Keep intensity · Rest legs',
+    gymSession:{
+      type:'strength', optional:true,
+      format:'Light Maintenance',
+      title:'Light Upper Body',duration:'30 min',
+      detail:'3 × 10 Push-ups or Light Bench (50% normal load) · 3 × 10 DB Rows · 2 × 10 Shoulder Press · 2 × max Pull-ups · 2 × 30s Plank',
+      notes:'Taper week — neural activation only. Stop 3 reps short of failure on every set. In and out in 30 min. No soreness allowed going into race week.',
+    },
     days:[
       {day:'Mon',session:{type:'compromised',workoutType:'complete',format:'6 Rounds',
         title:'Run + Station Accelerate',duration:'~45 min',

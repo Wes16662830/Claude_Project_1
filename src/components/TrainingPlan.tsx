@@ -80,6 +80,46 @@ export default function TrainingPlan({ profile }: Props) {
   const runSegment = profile.segments.find(s => s.id === 'running')
   const targetPace = runSegment?.targetSeconds ?? 272
   const scaledPace = targetPace + fitness.runPaceAdjustSec
+  const maxHR = profile.maxHR
+
+  // Pace zones derived from the user's scaled race pace
+  const paceZones = {
+    easy:      scaledPace + 90,
+    z2:        scaledPace + 65,
+    threshold: scaledPace + 22,
+    race:      scaledPace,
+    interval:  scaledPace - 15,
+    vo2:       Math.max(scaledPace - 32, 150),
+  }
+  // HR zone boundaries (bpm)
+  const hrZ2 = [Math.round(maxHR * 0.60), Math.round(maxHR * 0.70)]
+  const hrZ3 = [Math.round(maxHR * 0.70), Math.round(maxHR * 0.80)]
+  const hrZ4 = [Math.round(maxHR * 0.80), Math.round(maxHR * 0.90)]
+  const hrZ5 = [Math.round(maxHR * 0.90), maxHR]
+
+  // Race station loads (kg) for the user's division, scaled by fitness level
+  const isMenDiv = profile.division.includes('men')
+  const baseWB = isMenDiv ? 9 : 6
+  const baseFarmers = isMenDiv ? 24 : 16
+  const baseLunges = isMenDiv ? 20 : 10
+  const baseSled = isMenDiv ? 102 : 78
+  const loads = {
+    wall_balls: +(baseWB      * fitness.loadPct).toFixed(1),
+    farmers:    Math.round(baseFarmers * fitness.loadPct),
+    s_lunges:   Math.round(baseLunges  * fitness.loadPct),
+    sled:       Math.round(baseSled    * fitness.loadPct / 5) * 5,
+  }
+
+  // Derive which pace zone a run session is primarily targeting
+  function sessionPaceInfo(s: { title: string; format?: string }): { label: string; pace: number; hr: number[] } {
+    const t = (s.title + ' ' + (s.format ?? '')).toLowerCase()
+    if (/easy|long easy|zone 2|flush|activation/.test(t)) return { label: 'Z2 Aerobic', pace: paceZones.z2, hr: hrZ2 }
+    if (/fartlek/.test(t))                                 return { label: 'Z2 + Surges', pace: paceZones.z2, hr: hrZ3 }
+    if (/threshold|tempo/.test(t))                         return { label: 'Threshold', pace: paceZones.threshold, hr: hrZ4 }
+    if (/vo2|400m|800m/.test(t))                           return { label: 'VO2 / Intervals', pace: paceZones.vo2, hr: hrZ5 }
+    if (/emom|pace ladder|speed brick/.test(t))            return { label: 'Race + Compromised', pace: paceZones.race, hr: hrZ4 }
+    return { label: 'Race Pace', pace: paceZones.race, hr: hrZ4 }
+  }
 
   const toggle = (week: number) => {
     setExpandedWeeks(prev => {
@@ -171,6 +211,38 @@ export default function TrainingPlan({ profile }: Props) {
           ))}
         </div>
       )}
+
+      {/* Running Zones reference */}
+      <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '16px 20px', marginBottom: 16 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: '#aaa', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: 12 }}>
+          Your Running Zones
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 8 }}>
+          {([
+            { label: 'Easy / Z2',    pace: paceZones.z2,        hr: hrZ2, color: '#4a9fd4' },
+            { label: 'Threshold',    pace: paceZones.threshold,  hr: hrZ3, color: '#2a8c5a' },
+            { label: 'Race Pace',    pace: paceZones.race,       hr: hrZ4, color: '#e8962a' },
+            { label: 'Intervals',    pace: paceZones.interval,   hr: hrZ4, color: '#e8962a' },
+            { label: 'VO2 Max',      pace: paceZones.vo2,        hr: hrZ5, color: '#d63b2f' },
+          ] as const).map(z => (
+            <div key={z.label} style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 6, padding: '8px 10px' }}>
+              <div style={{ fontSize: 9, color: z.color, textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.6px', marginBottom: 4 }}>{z.label}</div>
+              <div style={{ fontSize: 15, fontWeight: 800, color: '#f0ede8', fontFamily: 'monospace', marginBottom: 2 }}>{fmtTime(z.pace)}<span style={{ fontSize: 10, fontWeight: 400, color: '#666' }}>/km</span></div>
+              <div style={{ fontSize: 10, color: '#666' }}>{z.hr[0]}–{z.hr[1]} bpm</div>
+            </div>
+          ))}
+          <div style={{ background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 6, padding: '8px 10px' }}>
+            <div style={{ fontSize: 9, color: '#888', textTransform: 'uppercase', fontWeight: 800, letterSpacing: '0.6px', marginBottom: 4 }}>Station Loads</div>
+            <div style={{ fontSize: 10, color: '#aaa', lineHeight: 1.7 }}>
+              Wall Balls <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.wall_balls}kg</span><br />
+              Farmers <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.farmers}kg</span>/hand<br />
+              Lunges bag <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.s_lunges}kg</span><br />
+              Sled <span style={{ color: '#f0ede8', fontWeight: 700 }}>{loads.sled}kg</span>
+            </div>
+          </div>
+        </div>
+        <div style={{ fontSize: 10, color: '#444', marginTop: 8 }}>Based on your target pace, fitness level, and max HR. Update in Settings → Segment Splits and Max HR.</div>
+      </div>
 
       {/* Your station map */}
       <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
@@ -266,7 +338,8 @@ export default function TrainingPlan({ profile }: Props) {
             </div>
 
             {open && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, padding: '0 20px 20px' }}>
+              <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, padding: '0 20px 16px' }}>
                 {week.days.map(d => {
                   const s = d.session
                   const rawType = s.type as string
@@ -277,9 +350,13 @@ export default function TrainingPlan({ profile }: Props) {
                     .map(id => resolveStation(id, profile.equipment))
                     .filter(r => r.status !== 'native')
 
-                  // Fitness scaling values for this session
-                  const showScaling = !isRest && fitness.id !== 'advanced'
                   const isRunSession = s.type === 'run'
+                  const showScaling = !isRest && fitness.id !== 'advanced'
+                  const showZones = isRunSession && !isRest
+                  const zoneInfo = isRunSession ? sessionPaceInfo(s) : null
+                  const hasStationLoads = !isRunSession && (s.stations ?? []).some(
+                    id => ['wall_balls','farmers','s_lunges','sled_push','sled_pull'].includes(id)
+                  )
 
                   return (
                     <div key={d.day} style={{
@@ -317,7 +394,49 @@ export default function TrainingPlan({ profile }: Props) {
                         </div>
                       )}
 
-                      {/* Fitness level scaling box */}
+                      {/* Zone targets for run sessions — shown for all fitness levels */}
+                      {showZones && zoneInfo && (
+                        <div style={{
+                          background: '#0d1a0d', border: '1px solid #4a9fd433',
+                          borderRadius: 6, padding: '8px 10px', marginBottom: 6,
+                        }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                            <span style={{ fontSize: 9, fontWeight: 800, color: '#4a9fd4', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Your Targets</span>
+                            <span style={{ fontSize: 9, color: '#4a9fd4', fontWeight: 600 }}>{zoneInfo.label}</span>
+                          </div>
+                          <div style={{ display: 'flex', gap: 12 }}>
+                            <div>
+                              <div style={{ fontSize: 10, color: '#666', marginBottom: 2 }}>Pace</div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: '#f0ede8', fontFamily: 'monospace' }}>
+                                {fmtTime(zoneInfo.pace)}<span style={{ fontSize: 10, fontWeight: 400, color: '#666' }}>/km</span>
+                              </div>
+                            </div>
+                            <div>
+                              <div style={{ fontSize: 10, color: '#666', marginBottom: 2 }}>HR zone</div>
+                              <div style={{ fontSize: 14, fontWeight: 800, color: '#f0ede8' }}>
+                                {zoneInfo.hr[0]}–{zoneInfo.hr[1]}<span style={{ fontSize: 10, fontWeight: 400, color: '#666' }}> bpm</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Station loads for strength sessions — shown for all fitness levels */}
+                      {hasStationLoads && (
+                        <div style={{
+                          background: '#0d0d1a', border: '1px solid #a855f722',
+                          borderRadius: 6, padding: '7px 10px', marginBottom: 6,
+                          fontSize: 10, color: '#888', lineHeight: 1.8,
+                        }}>
+                          <span style={{ fontSize: 9, fontWeight: 800, color: '#a855f7', textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: 4 }}>Your Loads</span>
+                          {(s.stations ?? []).includes('wall_balls')  && <span style={{ marginRight: 10 }}>Wall Balls <b style={{ color: '#f0ede8' }}>{loads.wall_balls}kg</b></span>}
+                          {(s.stations ?? []).includes('farmers')     && <span style={{ marginRight: 10 }}>Farmers <b style={{ color: '#f0ede8' }}>{loads.farmers}kg</b>/hand</span>}
+                          {(s.stations ?? []).includes('s_lunges')    && <span style={{ marginRight: 10 }}>Lunges bag <b style={{ color: '#f0ede8' }}>{loads.s_lunges}kg</b></span>}
+                          {((s.stations ?? []).includes('sled_push') || (s.stations ?? []).includes('sled_pull')) && <span>Sled <b style={{ color: '#f0ede8' }}>{loads.sled}kg</b></span>}
+                        </div>
+                      )}
+
+                      {/* Fitness level scaling box — non-advanced only */}
                       {showScaling && (
                         <div style={{
                           background: fitness.color + '0d',
@@ -325,47 +444,35 @@ export default function TrainingPlan({ profile }: Props) {
                           borderRadius: 6, padding: '8px 10px', marginBottom: 6,
                         }}>
                           <div style={{ fontSize: 10, fontWeight: 700, color: fitness.color, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: 7 }}>
-                            {fitness.label} — Your version
+                            {fitness.label} — Volume &amp; Load
                           </div>
                           {isRunSession ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            fitness.restMultiplier !== 1 ? (
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: 11, color: '#777' }}>Run pace target</span>
-                                <span style={{ fontSize: 12, fontWeight: 700, color: '#f0ede8', fontFamily: 'monospace' }}>
-                                  {fmtTime(scaledPace)}/km
-                                </span>
+                                <span style={{ fontSize: 11, color: '#777' }}>Rest periods</span>
+                                <span style={{ fontSize: 12, fontWeight: 700, color: '#f0ede8' }}>×{fitness.restMultiplier}</span>
                               </div>
-                              {fitness.restMultiplier !== 1 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                  <span style={{ fontSize: 11, color: '#777' }}>Rest periods</span>
-                                  <span style={{ fontSize: 12, fontWeight: 700, color: '#f0ede8' }}>×{fitness.restMultiplier}</span>
-                                </div>
-                              )}
-                            </div>
+                            ) : null
                           ) : (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
                               {[
-                                { k: 'Volume', pct: fitness.volumePct, label: `${Math.round(fitness.volumePct * 100)}% of prescribed` },
-                                { k: 'Load',   pct: fitness.loadPct,   label: `${Math.round(fitness.loadPct * 100)}% of prescribed` },
+                                { k: 'Volume', pct: fitness.volumePct, label: `${Math.round(fitness.volumePct * 100)}%` },
+                                { k: 'Load',   pct: fitness.loadPct,   label: `${Math.round(fitness.loadPct * 100)}%` },
                               ].map(row => (
-                                <div key={row.k}>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-                                    <span style={{ fontSize: 11, color: '#777' }}>{row.k}</span>
-                                    <span style={{ fontSize: 11, fontWeight: 700, color: '#f0ede8' }}>{row.label}</span>
-                                  </div>
+                                <div key={row.k} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 11, color: '#777', width: 48 }}>{row.k}</span>
                                   <ScaledBar pct={row.pct} color={fitness.color} />
+                                  <span style={{ fontSize: 11, fontWeight: 700, color: '#f0ede8', width: 36, textAlign: 'right' }}>{row.label}</span>
                                 </div>
                               ))}
                               {fitness.restMultiplier !== 1 && (
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
-                                  <span style={{ fontSize: 11, color: '#777' }}>Rest between sets</span>
+                                  <span style={{ fontSize: 11, color: '#777' }}>Rest</span>
                                   <span style={{ fontSize: 11, fontWeight: 700, color: '#f0ede8' }}>×{fitness.restMultiplier}</span>
                                 </div>
                               )}
                               {fitness.id === 'elite' && (
-                                <div style={{ fontSize: 10, color: fitness.color, marginTop: 2 }}>
-                                  Push beyond prescribed when you feel strong. Do not force it in weeks 1–3.
-                                </div>
+                                <div style={{ fontSize: 10, color: fitness.color, marginTop: 2 }}>Push beyond prescribed when you feel strong.</div>
                               )}
                             </div>
                           )}
@@ -388,6 +495,30 @@ export default function TrainingPlan({ profile }: Props) {
                   )
                 })}
               </div>
+
+              {/* Optional gym session */}
+              {week.gymSession && (() => {
+                const g = week.gymSession
+                return (
+                  <div style={{ margin: '0 20px 20px', border: '1px dashed #2a4a2a', borderRadius: 8, padding: '12px 14px', background: '#0a120a', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 10, right: 12, fontSize: 9, fontWeight: 800, color: '#2a8c5a', letterSpacing: '0.8px', background: '#2a8c5a22', border: '1px solid #2a8c5a44', padding: '2px 7px', borderRadius: 3 }}>
+                      OPTIONAL
+                    </div>
+                    <div style={{ fontSize: 10, color: '#2a8c5a', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.6px', marginBottom: 6 }}>+ Physique Day — {g.title.includes('Upper') ? 'Upper' : g.title.includes('Lower') ? 'Lower' : 'Light'} Body</div>
+                    {g.format && <div style={{ fontSize: 11, fontWeight: 700, color: HYROX_GOLD, letterSpacing: '0.3px', marginBottom: 4 }}>{g.format}</div>}
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#f0ede8', marginBottom: 4 }}>{g.title}</div>
+                    <div style={{ fontSize: 11, color: '#666', marginBottom: 8 }}>{g.duration} · Do on Wed or Fri — not before a hard run or sim</div>
+                    <div style={{ fontSize: 12, color: '#aaa', lineHeight: 1.6, marginBottom: 6 }}>{g.detail}</div>
+                    {fitness.id !== 'advanced' && (
+                      <div style={{ fontSize: 10, color: '#555', background: '#0d0d0d', borderRadius: 4, padding: '5px 8px', marginBottom: 6 }}>
+                        At your level: target {Math.round(fitness.loadPct * 65)}–{Math.round(fitness.loadPct * 75)}% of 1RM on compound lifts
+                      </div>
+                    )}
+                    <div style={{ fontSize: 11, color: '#2a8c5a', background: '#2a8c5a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }}>{g.notes}</div>
+                  </div>
+                )
+              })()}
+              </>
             )}
           </div>
         )

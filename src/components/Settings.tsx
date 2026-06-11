@@ -150,6 +150,24 @@ export default function Settings({ profile, setProfile }: Props) {
             <label style={fieldLabel}>Target finish (mm:ss)</label>
             <TimeInput seconds={profile.targetFinishSeconds} onCommit={s => update({ targetFinishSeconds: s })} />
           </div>
+          <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
+            <div style={{ flex: '0 0 auto' }}>
+              <label style={fieldLabel}>Max Heart Rate (bpm)</label>
+              <input
+                type="number" min={120} max={220}
+                style={{ ...inputStyle, width: 100, fontFamily: 'monospace', textAlign: 'center' }}
+                value={profile.maxHR}
+                onChange={e => { const v = parseInt(e.target.value); if (v >= 120 && v <= 220) update({ maxHR: v }) }}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: '#555', lineHeight: 1.6, paddingBottom: 2 }}>
+              Estimate: 220 − your age. Used to compute HR targets in each session.<br />
+              Z2: {Math.round(profile.maxHR * 0.60)}–{Math.round(profile.maxHR * 0.70)} bpm &nbsp;·&nbsp;
+              Z3: {Math.round(profile.maxHR * 0.70)}–{Math.round(profile.maxHR * 0.80)} bpm &nbsp;·&nbsp;
+              Z4: {Math.round(profile.maxHR * 0.80)}–{Math.round(profile.maxHR * 0.90)} bpm &nbsp;·&nbsp;
+              Z5: {Math.round(profile.maxHR * 0.90)}+ bpm
+            </div>
+          </div>
         </div>
       </div>
 

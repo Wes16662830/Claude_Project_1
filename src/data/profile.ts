@@ -277,6 +277,7 @@ export interface Profile {
   segments: SegmentSplit[]
   fitnessLevel: FitnessLevel
   trainingMode: 'solo' | 'partner'
+  maxHR: number
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -291,6 +292,7 @@ export const DEFAULT_PROFILE: Profile = {
   segments: DEFAULT_SEGMENTS,
   fitnessLevel: 'advanced',
   trainingMode: 'partner',
+  maxHR: 185,
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'
