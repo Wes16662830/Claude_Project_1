@@ -276,6 +276,7 @@ export interface Profile {
   equipment: EquipmentId[]
   segments: SegmentSplit[]
   fitnessLevel: FitnessLevel
+  trainingMode: 'solo' | 'partner'
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -289,6 +290,7 @@ export const DEFAULT_PROFILE: Profile = {
   equipment: ['barbell', 'rack', 'dumbbell', 'kettlebell', 'bands', 'pullup_bar', 'sandbag'],
   segments: DEFAULT_SEGMENTS,
   fitnessLevel: 'advanced',
+  trainingMode: 'partner',
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'

@@ -97,6 +97,36 @@ export default function Settings({ profile, setProfile }: Props) {
             </select>
             <div style={{ fontSize: 12, color: '#666', marginTop: 8, lineHeight: 1.5 }}>{division.loadNote}</div>
           </div>
+
+          {division.athletes > 1 && (
+            <div style={{ gridColumn: '1 / -1' }}>
+              <label style={fieldLabel}>Training Mode</label>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {([
+                  { id: 'partner', label: 'With Partner', desc: 'Workouts show the doubles split — rep sharing and handover cues.' },
+                  { id: 'solo',    label: 'Solo',         desc: 'Train alone at full doubles volume. Great overload — harder than race day.' },
+                ] as const).map(({ id, label, desc }) => {
+                  const sel = profile.trainingMode === id
+                  return (
+                    <button key={id} onClick={() => update({ trainingMode: id })} style={{
+                      flex: 1, padding: '10px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                      border: `1px solid ${sel ? '#e8c12a' : '#2a2a2a'}`,
+                      background: sel ? '#e8c12a18' : '#0a0a0a',
+                      color: sel ? '#e8c12a' : '#888', fontWeight: sel ? 600 : 400,
+                      textAlign: 'left', transition: 'all 0.12s',
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                        <span style={{ fontSize: 15 }}>{id === 'partner' ? '👥' : '🏃'}</span>
+                        <span>{label}</span>
+                        {sel && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.6px' }}>ACTIVE</span>}
+                      </div>
+                      <div style={{ fontSize: 11, color: sel ? '#e8c12a99' : '#555', lineHeight: 1.4 }}>{desc}</div>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

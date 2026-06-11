@@ -75,6 +75,7 @@ export default function TrainingPlan({ profile }: Props) {
   const division = getDivision(profile.division)
   const fitness = getFitnessLevel(profile.fitnessLevel)
   const isSolo = division.athletes === 1
+  const trainingAlone = profile.trainingMode === 'solo'
 
   const runSegment = profile.segments.find(s => s.id === 'running')
   const targetPace = runSegment?.targetSeconds ?? 272
@@ -200,7 +201,12 @@ export default function TrainingPlan({ profile }: Props) {
 
       {isSolo && (
         <div style={{ background: '#1a0d2d', border: '1px solid #a855f733', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#c79bf0' }}>
-          Solo division — ignore "each partner / both athletes" and handover cues. You do the full work yourself.
+          Solo division — you do the full work yourself on every session.
+        </div>
+      )}
+      {!isSolo && trainingAlone && (
+        <div style={{ background: '#1a1400', border: '1px solid #e8c12a33', borderRadius: 8, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#e8c12a' }}>
+          Solo training mode — workouts show individual instructions. You carry the full doubles volume: harder than race day, exactly by design.
         </div>
       )}
 
@@ -366,14 +372,18 @@ export default function TrainingPlan({ profile }: Props) {
                         </div>
                       )}
 
-                      {/* Notes */}
-                      {s.notes && (
-                        <div style={
-                          isRace
-                            ? { fontSize: 11, color: '#e8962a', background: '#e8962a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
-                            : { fontSize: 11, color: SESSION_COLORS[type].text, background: SESSION_COLORS[type].border + '11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
-                        }>{s.notes}</div>
-                      )}
+                      {/* Notes — prefer soloNotes when training alone */}
+                      {(() => {
+                        const notesText = (trainingAlone || isSolo) && s.soloNotes ? s.soloNotes : s.notes
+                        if (!notesText) return null
+                        return (
+                          <div style={
+                            isRace
+                              ? { fontSize: 11, color: '#e8962a', background: '#e8962a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
+                              : { fontSize: 11, color: SESSION_COLORS[type].text, background: SESSION_COLORS[type].border + '11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
+                          }>{notesText}</div>
+                        )
+                      })()}
                     </div>
                   )
                 })}
