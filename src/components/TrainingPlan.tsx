@@ -3,6 +3,7 @@ import {
   TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, WORKOUT_TYPE_LABEL, WEEK_LOAD,
   type Phase, type SessionType, type WorkoutType,
 } from '../data/trainingPlan'
+import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
   resolveStation, getDivision, getFitnessLevel, STATION_LABELS,
   type Profile, type StationId, type ResolvedStation,
@@ -516,6 +517,17 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                           }>{notesText}</div>
                         )
                       })()}
+
+                      {/* Session motivation */}
+                      {SESSION_MOTIVATION[sessionId] && (
+                        <div style={{
+                          marginTop: 8, fontSize: 11, color: '#e8c12a',
+                          fontStyle: 'italic', lineHeight: 1.5,
+                          borderTop: '1px solid #1a1a1a', paddingTop: 8,
+                        }}>
+                          {SESSION_MOTIVATION[sessionId]}
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -540,6 +552,11 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                       </div>
                     )}
                     <div style={{ fontSize: 11, color: '#2a8c5a', background: '#2a8c5a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }}>{g.notes}</div>
+                    {SESSION_MOTIVATION[`w${week.week}_gym`] && (
+                      <div style={{ marginTop: 8, fontSize: 11, color: '#e8c12a', fontStyle: 'italic', lineHeight: 1.5, borderTop: '1px solid #1a2a1a', paddingTop: 8 }}>
+                        {SESSION_MOTIVATION[`w${week.week}_gym`]}
+                      </div>
+                    )}
                   </div>
                 )
               })()}
