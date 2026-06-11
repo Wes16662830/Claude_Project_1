@@ -3,6 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveCo
 import { fmtTime } from '../data/raceData'
 import { getFitnessLevel, type Profile, type SegmentSplit } from '../data/profile'
 import { TRAINING_PLAN, WEEK_LOAD, PHASE_COLORS } from '../data/trainingPlan'
+import { getBenchmark, SA_FIELD_LADDER, MOTIVATION } from '../data/benchmarks'
 
 const card: React.CSSProperties = {
   background: '#111',
@@ -61,6 +62,29 @@ export default function Dashboard({ profile }: Props) {
 
   const budgetPct = totalNeeded > 0 ? Math.min(totalSavings / totalNeeded, 1) : 1
   const projColor = budgetGap <= 0 ? '#2a8c5a' : budgetGap < 60 ? '#e8962a' : '#d63b2f'
+
+  // Benchmark rows: your actual vs target vs the top SA 35-39 teams
+  const mult = (s: SegmentSplit) => (s.type === 'run' ? 8 : 1)
+  const benchRows = segments.map(s => {
+    const b = getBenchmark(s.id)
+    const m = mult(s)
+    return {
+      seg: s, m,
+      actual: s.actualSeconds,
+      target: s.targetSeconds,
+      competitive: b?.competitive ?? s.targetSeconds,
+      podium: b?.podium ?? s.targetSeconds,
+      // total seconds you'd save vs current actual by reaching the competitive benchmark
+      vsCompSave: (s.actualSeconds - (b?.competitive ?? s.actualSeconds)) * m,
+    }
+  })
+  // Projected finish if you hit the competitive (top-10%) benchmark on every station
+  const projAtComp = benchRows.reduce((a, r) => a + r.competitive * r.m, 0) + transitions
+  // Biggest opportunities vs the top guys, ranked
+  const benchOpps = [...benchRows].sort((a, b) => b.vsCompSave - a.vsCompSave)
+  const motivation = budgetGap <= 0 ? MOTIVATION.onTrack[0]
+    : budgetGap > 120 ? MOTIVATION.bigGap[0]
+    : MOTIVATION.closing[0]
 
   const heroes = [
     { label: 'Last Finish',        value: fmtTime(lastFinishSeconds),        sub: profile.lastRaceName,                color: '#f0ede8' },
@@ -146,6 +170,111 @@ export default function Dashboard({ profile }: Props) {
             <span style={{ color: '#666' }}> — adjust in Settings → Segment Splits</span>
           </div>
         )}
+      </div>
+
+      {/* Chasing the PB — SA 35-39 benchmarks */}
+      <div style={{ ...card, borderTop: '2px solid #e8962a' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6, flexWrap: 'wrap', gap: 8 }}>
+          <div style={sectionTitle}>Chasing the PB — vs SA 35-39 Doubles Men</div>
+          <div style={{ fontSize: 11, color: '#666' }}>top-10% & podium splits</div>
+        </div>
+        <div style={{ fontSize: 12, color: '#888', lineHeight: 1.6, marginBottom: 16 }}>
+          {motivation}
+        </div>
+
+        {/* If-you-hit-competitive projection */}
+        <div style={{
+          display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'center',
+          background: '#0d0d0d', border: '1px solid #1a1a1a', borderRadius: 8,
+          padding: '12px 16px', marginBottom: 18,
+        }}>
+          <div>
+            <div style={{ fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.6px' }}>If you match top-10% splits</div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: '#2a8c5a', letterSpacing: '-1px', fontFamily: 'monospace' }}>
+              {fmtTime(projAtComp)}
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: '#888', lineHeight: 1.5, flex: 1, minWidth: 180 }}>
+            {projAtComp <= targetFinishSeconds
+              ? <>That clears your <b style={{ color: '#e8962a' }}>{fmtTime(targetFinishSeconds)}</b> goal by {fmtTime(targetFinishSeconds - projAtComp)} — the top-10% template alone gets you there.</>
+              : <>Even at top-10% splits you'd run {fmtTime(projAtComp)}. Your <b style={{ color: '#e8962a' }}>{fmtTime(targetFinishSeconds)}</b> goal needs a touch more on the biggest levers below.</>}
+          </div>
+        </div>
+
+        {/* Benchmark table */}
+        <div style={{ overflowX: 'auto' }}>
+          <div style={{ minWidth: 460 }}>
+            {/* Header row */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr', gap: 8, fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '0.5px', paddingBottom: 8, borderBottom: '1px solid #1a1a1a', marginBottom: 8 }}>
+              <div>Station</div>
+              <div style={{ textAlign: 'right' }}>You now</div>
+              <div style={{ textAlign: 'right', color: '#e8962a' }}>Your target</div>
+              <div style={{ textAlign: 'right', color: '#4a9fd4' }}>Top 10%</div>
+              <div style={{ textAlign: 'right', color: '#2a8c5a' }}>Podium</div>
+            </div>
+            {benchRows.map(r => {
+              const unit = r.seg.type === 'run' ? '/km' : ''
+              const behindComp = r.actual > r.competitive
+              return (
+                <div key={r.seg.id} style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1fr 1fr 1fr', gap: 8, fontSize: 12, padding: '6px 0', alignItems: 'center' }}>
+                  <div style={{ color: '#ccc' }}>{r.seg.label}</div>
+                  <div style={{ textAlign: 'right', fontFamily: 'monospace', color: behindComp ? '#d6766f' : '#2a8c5a' }}>{fmtTime(r.actual)}{unit}</div>
+                  <div style={{ textAlign: 'right', fontFamily: 'monospace', color: '#e8962a' }}>{fmtTime(r.target)}{unit}</div>
+                  <div style={{ textAlign: 'right', fontFamily: 'monospace', color: '#4a9fd4' }}>{fmtTime(r.competitive)}{unit}</div>
+                  <div style={{ textAlign: 'right', fontFamily: 'monospace', color: '#2a8c5a' }}>{fmtTime(r.podium)}{unit}</div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Where the time comes from — vs top 10% */}
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#aaa', marginBottom: 4 }}>Where the minutes are — gap to top-10% splits</div>
+          <div style={{ fontSize: 11, color: '#666', marginBottom: 12 }}>Running counts ×8 (every km). These are the seconds the top SA teams are taking out of you.</div>
+          {benchOpps.filter(r => r.vsCompSave > 0).map(r => {
+            const maxSave = Math.max(...benchOpps.map(x => x.vsCompSave), 1)
+            const pct = r.vsCompSave / maxSave * 100
+            return (
+              <div key={r.seg.id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 9 }}>
+                <div style={{ width: 110, fontSize: 12, color: '#ccc', flexShrink: 0 }}>{r.seg.label}</div>
+                <div style={{ flex: 1, height: 7, background: '#1a1a1a', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ height: '100%', width: `${pct}%`, background: r.seg.type === 'run' ? '#e8962a' : '#4a9fd4', borderRadius: 4 }} />
+                </div>
+                <div style={{ width: 76, fontSize: 12, fontWeight: 700, textAlign: 'right', flexShrink: 0, color: r.seg.type === 'run' ? '#e8962a' : '#4a9fd4' }}>
+                  {fmtTime(r.vsCompSave)}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Field ladder — where 1:02 sits */}
+        <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid #1a1a1a' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#aaa', marginBottom: 12 }}>Where you'll stand — SA 35-39 ladder</div>
+          {SA_FIELD_LADDER.map(ref => {
+            const isYou = ref.label.startsWith('Your')
+            const reached = lastFinishSeconds <= ref.seconds
+            return (
+              <div key={ref.label} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '6px 10px', marginBottom: 4,
+                borderRadius: 6, background: isYou ? '#e8962a14' : 'transparent',
+                border: isYou ? '1px solid #e8962a44' : '1px solid transparent',
+              }}>
+                <div style={{ width: 56, fontFamily: 'monospace', fontSize: 13, fontWeight: 700, color: isYou ? '#e8962a' : reached ? '#2a8c5a' : '#888', flexShrink: 0 }}>
+                  {fmtTime(ref.seconds)}
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 12, color: isYou ? '#e8962a' : '#ccc', fontWeight: isYou ? 700 : 400 }}>{ref.label}</div>
+                  <div style={{ fontSize: 10, color: '#555', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ref.note}</div>
+                </div>
+              </div>
+            )
+          })}
+          <div style={{ fontSize: 10, color: '#444', marginTop: 8, lineHeight: 1.5 }}>
+            SA 35-39 age-group splits aren't published per-station — these are modelled from 425k+ global doubles finishes, calibrated to confirmed SA event winners (CT 2025 54:55, CT 2026 Pro 51:58). Treat as a target template, not gospel.
+          </div>
+        </div>
       </div>
 
       {/* Gap by Segment */}
