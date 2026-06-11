@@ -5,6 +5,7 @@ import TrainingPlan from './components/TrainingPlan'
 import SplitAnalysis from './components/SplitAnalysis'
 import Settings from './components/Settings'
 import Partner from './components/Partner'
+import Today from './components/Today'
 import { loadProfile, saveProfile, type Profile } from './data/profile'
 import {
   loadCompleted, saveCompleted, loadPartner, savePartner,
@@ -12,7 +13,7 @@ import {
 } from './data/progress'
 
 export default function App() {
-  const [tab, setTab] = useState('dashboard')
+  const [tab, setTab] = useState('today')
   const [profile, setProfileState] = useState<Profile>(() => loadProfile())
   const [completed, setCompletedState] = useState<Set<string>>(() => loadCompleted())
   const [partner, setPartnerState] = useState<PartnerSnapshot | null>(() => loadPartner())
@@ -44,6 +45,7 @@ export default function App() {
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
       <Header activeTab={tab} onTabChange={setTab} profile={profile} partner={partner} />
       <main>
+        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
         {tab === 'dashboard' && <Dashboard profile={profile} />}
         {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}

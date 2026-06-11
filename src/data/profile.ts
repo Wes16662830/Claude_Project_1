@@ -278,6 +278,7 @@ export interface Profile {
   fitnessLevel: FitnessLevel
   trainingMode: 'solo' | 'partner'
   maxHR: number
+  planStartDate: string   // YYYY-MM-DD — the Monday of Week 1
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -293,6 +294,7 @@ export const DEFAULT_PROFILE: Profile = {
   fitnessLevel: 'advanced',
   trainingMode: 'partner',
   maxHR: 185,
+  planStartDate: '',
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'

@@ -173,6 +173,19 @@ export default function Settings({ profile, setProfile }: Props) {
             <label style={fieldLabel}>Target finish (mm:ss)</label>
             <TimeInput seconds={profile.targetFinishSeconds} onCommit={s => update({ targetFinishSeconds: s })} />
           </div>
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={fieldLabel}>Plan Start Date — Week 1 Monday</label>
+            <input
+              type="date"
+              style={{ ...inputStyle, maxWidth: 200 }}
+              value={profile.planStartDate ?? ''}
+              onChange={e => update({ planStartDate: e.target.value })}
+            />
+            <div style={{ fontSize: 11, color: '#555', marginTop: 6, lineHeight: 1.5 }}>
+              The Monday you begin Week 1. The Today tab uses this to show your current workout automatically.
+            </div>
+          </div>
+
           <div style={{ gridColumn: '1 / -1', display: 'flex', alignItems: 'flex-end', gap: 16, flexWrap: 'wrap' }}>
             <div style={{ flex: '0 0 auto' }}>
               <label style={fieldLabel}>Max Heart Rate (bpm)</label>
