@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { fmtTime, parseTime } from '../data/raceData'
 import {
-  DIVISIONS, EQUIPMENT_CATALOG, getDivision, DEFAULT_PROFILE,
-  type Profile, type EquipmentId, type Equipment,
+  DIVISIONS, EQUIPMENT_CATALOG, FITNESS_LEVELS, getDivision, DEFAULT_PROFILE,
+  type Profile, type EquipmentId, type Equipment, type FitnessLevel,
 } from '../data/profile'
 
 const card: React.CSSProperties = {
@@ -187,6 +187,53 @@ export default function Settings({ profile, setProfile }: Props) {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Fitness level */}
+      <div style={card}>
+        <div style={sectionTitle}>Fitness Level</div>
+        <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
+          Sets how each workout scales. Volume, load, run pace, and rest periods all adjust to match where you are now.
+          The plan still gets harder week over week — this controls the starting point.
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          {FITNESS_LEVELS.map(lvl => {
+            const selected = profile.fitnessLevel === lvl.id
+            return (
+              <button
+                key={lvl.id}
+                onClick={() => update({ fitnessLevel: lvl.id as FitnessLevel })}
+                style={{
+                  background: selected ? lvl.color + '18' : '#0a0a0a',
+                  border: `1px solid ${selected ? lvl.color : '#2a2a2a'}`,
+                  borderRadius: 10, padding: '14px 16px', cursor: 'pointer', textAlign: 'left',
+                  transition: 'all 0.15s',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <div style={{ width: 10, height: 10, borderRadius: '50%', background: lvl.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: selected ? lvl.color : '#f0ede8' }}>{lvl.label}</span>
+                  {selected && <span style={{ fontSize: 10, color: lvl.color, marginLeft: 'auto', fontWeight: 700, letterSpacing: '0.4px' }}>SELECTED</span>}
+                </div>
+                <div style={{ fontSize: 11, color: selected ? lvl.color + 'cc' : '#888', fontWeight: 600, marginBottom: 6 }}>{lvl.tagline}</div>
+                <div style={{ fontSize: 11, color: '#666', lineHeight: 1.5, marginBottom: 10 }}>{lvl.description}</div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4px 12px' }}>
+                  {[
+                    ['Volume', `${Math.round(lvl.volumePct * 100)}%`],
+                    ['Load', `${Math.round(lvl.loadPct * 100)}%`],
+                    ['Pace', lvl.runPaceAdjustSec === 0 ? 'Target' : lvl.runPaceAdjustSec > 0 ? `+${lvl.runPaceAdjustSec}s/km` : `${lvl.runPaceAdjustSec}s/km`],
+                    ['Rest', lvl.restMultiplier === 1 ? 'As written' : `×${lvl.restMultiplier}`],
+                  ].map(([k, v]) => (
+                    <div key={k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 10, color: '#555' }}>{k}</span>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: selected ? lvl.color : '#aaa' }}>{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </button>
+            )
+          })}
         </div>
       </div>
 

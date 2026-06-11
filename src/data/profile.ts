@@ -191,6 +191,78 @@ export const DEFAULT_SEGMENTS: SegmentSplit[] = [
 ]
 
 // ---------------------------------------------------------------------------
+// Fitness level
+// ---------------------------------------------------------------------------
+export type FitnessLevel = 'beginner' | 'intermediate' | 'advanced' | 'elite'
+
+export interface FitnessLevelConfig {
+  id: FitnessLevel
+  label: string
+  tagline: string
+  color: string
+  description: string
+  runPaceAdjustSec: number   // seconds/km added to target pace (+ve = slower)
+  volumePct: number          // multiply prescribed reps/sets
+  loadPct: number            // multiply prescribed load
+  restMultiplier: number     // multiply prescribed rest
+  sessionCapPerWeek: number  // drop later days if over cap
+}
+
+export const FITNESS_LEVELS: FitnessLevelConfig[] = [
+  {
+    id: 'beginner',
+    label: 'Beginner',
+    tagline: 'Building the base',
+    color: '#4a9fd4',
+    description: 'New to Hyrox or structured training. Less than 6 months of consistent work. Focus on technique over intensity.',
+    runPaceAdjustSec: 60,
+    volumePct: 0.6,
+    loadPct: 0.7,
+    restMultiplier: 1.5,
+    sessionCapPerWeek: 4,
+  },
+  {
+    id: 'intermediate',
+    label: 'Intermediate',
+    tagline: 'Race fit',
+    color: '#2a8c5a',
+    description: 'Some Hyrox or fitness background. Can run 5km under 30 min and complete all stations with correct technique.',
+    runPaceAdjustSec: 25,
+    volumePct: 0.8,
+    loadPct: 0.85,
+    restMultiplier: 1.2,
+    sessionCapPerWeek: 5,
+  },
+  {
+    id: 'advanced',
+    label: 'Advanced',
+    tagline: 'As prescribed',
+    color: '#e8962a',
+    description: 'Completed a Hyrox. Comfortable at race pace. Full plan exactly as written — this is the baseline.',
+    runPaceAdjustSec: 0,
+    volumePct: 1.0,
+    loadPct: 1.0,
+    restMultiplier: 1.0,
+    sessionCapPerWeek: 7,
+  },
+  {
+    id: 'elite',
+    label: 'Elite',
+    tagline: 'Podium hunting',
+    color: '#d63b2f',
+    description: 'Top-10% finisher targeting the podium. Volume and load above prescribed — be conservative early in the plan.',
+    runPaceAdjustSec: -10,
+    volumePct: 1.1,
+    loadPct: 1.1,
+    restMultiplier: 0.9,
+    sessionCapPerWeek: 7,
+  },
+]
+
+export const getFitnessLevel = (id: FitnessLevel): FitnessLevelConfig =>
+  FITNESS_LEVELS.find(l => l.id === id) ?? FITNESS_LEVELS[2]
+
+// ---------------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------------
 export interface Profile {
@@ -203,6 +275,7 @@ export interface Profile {
   targetFinishSeconds: number
   equipment: EquipmentId[]
   segments: SegmentSplit[]
+  fitnessLevel: FitnessLevel
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -215,6 +288,7 @@ export const DEFAULT_PROFILE: Profile = {
   targetFinishSeconds: 62 * 60,    // 1:02:00
   equipment: ['barbell', 'rack', 'dumbbell', 'kettlebell', 'bands', 'pullup_bar', 'sandbag'],
   segments: DEFAULT_SEGMENTS,
+  fitnessLevel: 'advanced',
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'

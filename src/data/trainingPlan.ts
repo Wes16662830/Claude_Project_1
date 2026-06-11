@@ -53,6 +53,14 @@ export const SESSION_COLORS: Record<SessionType, { bg: string; border: string; t
   rest:        { bg: '#111111', border: '#333333', text: '#555555', label: 'Rest' },
 }
 
+// Load score per week (0–100). Peaks at week 7 (GRIND), tapers in 10–11.
+// Used to draw the progression curve.
+export const WEEK_LOAD: Record<number, number> = {
+  1: 32, 2: 40, 3: 47, 4: 56,
+  5: 66, 6: 73, 7: 87, 8: 76,
+  9: 82, 10: 50, 11: 24,
+}
+
 export const TRAINING_PLAN: TrainingWeek[] = [
   {
     week:1, phase:'aerobic', weekTheme:'BASE',

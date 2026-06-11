@@ -1,6 +1,8 @@
 import React from 'react'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Cell, ResponsiveContainer } from 'recharts'
 import { fmtTime } from '../data/raceData'
-import { type Profile, type SegmentSplit } from '../data/profile'
+import { getFitnessLevel, type Profile, type SegmentSplit } from '../data/profile'
+import { TRAINING_PLAN, WEEK_LOAD, PHASE_COLORS } from '../data/trainingPlan'
 
 const card: React.CSSProperties = {
   background: '#111',
@@ -120,6 +122,56 @@ export default function Dashboard({ profile }: Props) {
           </div>
         </div>
       )}
+
+      {/* Training load progression */}
+      {(() => {
+        const fitness = getFitnessLevel(profile.fitnessLevel)
+        const chartData = TRAINING_PLAN.map(w => ({
+          week: `W${w.week}`,
+          theme: w.weekTheme,
+          load: Math.round((WEEK_LOAD[w.week] ?? 50) * fitness.volumePct),
+          phase: w.phase,
+        }))
+        return (
+          <div style={card}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4, flexWrap: 'wrap', gap: 8 }}>
+              <div style={sectionTitle}>Training Load Progression</div>
+              <div style={{ fontSize: 12, color: fitness.color, fontWeight: 600, marginBottom: 16 }}>
+                {fitness.label} — {Math.round(fitness.volumePct * 100)}% volume
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={chartData} margin={{ top: 0, right: 0, left: -30, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
+                <XAxis dataKey="week" tick={{ fill: '#666', fontSize: 10 }} tickLine={false} />
+                <YAxis tick={{ fill: '#666', fontSize: 10 }} tickLine={false} axisLine={false} />
+                <Tooltip
+                  contentStyle={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 8, fontSize: 12 }}
+                  labelStyle={{ color: '#aaa' }}
+                  formatter={(v: number, _: string, entry: { payload?: { theme?: string } }) => [
+                    `${v} load units`,
+                    entry.payload?.theme ?? '',
+                  ]}
+                />
+                <Bar dataKey="load" radius={[3, 3, 0, 0]}>
+                  {chartData.map((entry, i) => (
+                    <Cell key={i} fill={PHASE_COLORS[entry.phase as keyof typeof PHASE_COLORS] + 'cc'} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+            <div style={{ display: 'flex', gap: 16, marginTop: 8, flexWrap: 'wrap' }}>
+              {(['aerobic', 'build', 'peak'] as const).map(p => (
+                <div key={p} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#777' }}>
+                  <div style={{ width: 8, height: 8, borderRadius: 2, background: PHASE_COLORS[p] }} />
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </div>
+              ))}
+              <span style={{ marginLeft: 'auto', fontSize: 11, color: '#555' }}>Peaks W7, tapers W10–11</span>
+            </div>
+          </div>
+        )
+      })()}
     </div>
   )
 }
