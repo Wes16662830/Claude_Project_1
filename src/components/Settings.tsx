@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { fmtTime, parseTime } from '../data/raceData'
 import {
-  DIVISIONS, EQUIPMENT_CATALOG, FITNESS_LEVELS, getDivision, DEFAULT_PROFILE,
-  type Profile, type EquipmentId, type Equipment, type FitnessLevel,
+  DIVISIONS, EQUIPMENT_CATALOG, FITNESS_LEVELS, getDivision, getStationLoads, DEFAULT_PROFILE,
+  type Profile, type EquipmentId, type Equipment, type FitnessLevel, type StationLoads,
 } from '../data/profile'
 
 const card: React.CSSProperties = {
@@ -237,6 +237,72 @@ export default function Settings({ profile, setProfile }: Props) {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Station Loads */}
+      <div style={card}>
+        <div style={sectionTitle}>Station Loads</div>
+        <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
+          Pre-filled with your division's official loads. Edit any field to override — the Training Plan will use your values.
+          {profile.customLoads && (
+            <span style={{ color: '#e8962a', fontWeight: 600 }}> Custom loads active.</span>
+          )}
+        </div>
+        {(() => {
+          const divLoads = getStationLoads(profile.division)
+          const current: StationLoads = profile.customLoads ?? divLoads
+          const isDirty = (k: keyof StationLoads) => profile.customLoads != null && profile.customLoads[k] !== divLoads[k]
+
+          const updateLoad = (k: keyof StationLoads, v: number) => {
+            const next: StationLoads = { ...(profile.customLoads ?? divLoads), [k]: v }
+            update({ customLoads: next })
+          }
+
+          const rows: { key: keyof StationLoads; label: string; unit: string; min: number; max: number; step: number }[] = [
+            { key: 'wall_balls', label: 'Wall Balls',      unit: 'kg',       min: 2,  max: 20,  step: 1   },
+            { key: 'farmers',    label: 'Farmers Carry',   unit: 'kg/hand',  min: 8,  max: 48,  step: 2   },
+            { key: 's_lunges',   label: 'Sandbag Lunges',  unit: 'kg',       min: 5,  max: 50,  step: 2.5 },
+            { key: 'sled_push',  label: 'Sled Push',       unit: 'kg total', min: 25, max: 300, step: 5   },
+            { key: 'sled_pull',  label: 'Sled Pull',       unit: 'kg total', min: 25, max: 200, step: 5   },
+          ]
+
+          return (
+            <>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 12 }}>
+                {rows.map(({ key, label, unit, min, max }) => (
+                  <div key={key}>
+                    <label style={{ ...fieldLabel, color: isDirty(key) ? '#e8962a' : '#888' }}>{label}</label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <NumberInput
+                        value={current[key]}
+                        min={min} max={max}
+                        onCommit={v => updateLoad(key, v)}
+                        style={{ ...inputStyle, width: 80, fontFamily: 'monospace', textAlign: 'center' }}
+                      />
+                      <span style={{ fontSize: 11, color: '#555', flexShrink: 0 }}>{unit}</span>
+                    </div>
+                    {isDirty(key) && (
+                      <div style={{ fontSize: 10, color: '#666', marginTop: 3 }}>
+                        default {divLoads[key]}{unit.split('/')[0]}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {profile.customLoads && (
+                <button
+                  onClick={() => update({ customLoads: null })}
+                  style={{
+                    marginTop: 14, background: 'none', border: '1px solid #2a2a2a',
+                    borderRadius: 6, padding: '7px 14px', color: '#888', fontSize: 12, cursor: 'pointer',
+                  }}
+                >
+                  Reset to division defaults
+                </button>
+              )}
+            </>
+          )
+        })()}
       </div>
 
       {/* Segment splits */}

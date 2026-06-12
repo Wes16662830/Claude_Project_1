@@ -5,7 +5,7 @@ import {
 } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
-  resolveStation, getDivision, getFitnessLevel, getStationLoads, STATION_LABELS,
+  resolveStation, getDivision, getFitnessLevel, resolveLoads, STATION_LABELS,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { fmtTime } from '../data/raceData'
@@ -102,8 +102,8 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
   const hrZ4 = [Math.round(maxHR * 0.80), Math.round(maxHR * 0.90)]
   const hrZ5 = [Math.round(maxHR * 0.90), maxHR]
 
-  // Race station loads — official Hyrox loads for the user's division, scaled by fitness level
-  const baseLoads = getStationLoads(profile.division)
+  // Race station loads — custom overrides win, then division defaults, both scaled by fitness level
+  const baseLoads = resolveLoads(profile)
   const loads = {
     wall_balls: +(baseLoads.wall_balls * fitness.loadPct).toFixed(1),
     farmers:    Math.round(baseLoads.farmers   * fitness.loadPct),

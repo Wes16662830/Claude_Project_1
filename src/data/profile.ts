@@ -210,6 +210,12 @@ export function getStationLoads(divisionId: DivisionId): StationLoads {
   return DIVISION_LOADS[divisionId] ?? DIVISION_LOADS.open_doubles_men
 }
 
+export function resolveLoads(profile: { division: DivisionId; customLoads?: StationLoads | null }): StationLoads {
+  const base = getStationLoads(profile.division)
+  if (!profile.customLoads) return base
+  return { ...base, ...profile.customLoads }
+}
+
 // ---------------------------------------------------------------------------
 // Default segments (Wesley + Glenn, Johannesburg 2026)
 // ---------------------------------------------------------------------------
@@ -313,7 +319,8 @@ export interface Profile {
   fitnessLevel: FitnessLevel
   trainingMode: 'solo' | 'partner'
   maxHR: number
-  planStartDate: string   // YYYY-MM-DD — the Monday of Week 1
+  planStartDate: string        // YYYY-MM-DD — the Monday of Week 1
+  customLoads: StationLoads | null  // null = use division defaults
 }
 
 export const DEFAULT_PROFILE: Profile = {
@@ -330,6 +337,7 @@ export const DEFAULT_PROFILE: Profile = {
   trainingMode: 'partner',
   maxHR: 185,
   planStartDate: '',
+  customLoads: null,
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'
