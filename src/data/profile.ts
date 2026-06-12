@@ -188,16 +188,22 @@ export interface StationLoads {
   sled_pull: number    // kg (including sled)
 }
 
+// Loads from official Hyrox Doubles sheet (confirmed by user):
+//   Doubles Men:   6kg WB · 125kg push · 75kg pull · 2×24kg farmers · 20kg lunges
+//   Doubles Women: 4kg WB · 75kg push  · 50kg pull · 2×16kg farmers · 10kg lunges
+//   Mixed Doubles: 6kg WB · 125kg push · 75kg pull · 2×24kg farmers · 20kg lunges
+// Singles and Pro loads are best-estimate (not confirmed from sheet).
+// Sled weights are plate load only (+ sled frame on race day).
 const DIVISION_LOADS: Record<DivisionId, StationLoads> = {
-  open_doubles_men:   { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
-  open_doubles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 78,  sled_pull: 56  },
-  pro_doubles_men:    { wall_balls: 6,  farmers: 32, s_lunges: 30, sled_push: 152, sled_pull: 102 },
-  mixed_doubles:      { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
-  open_singles_men:   { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
-  open_singles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 78,  sled_pull: 56  },
-  pro_singles_men:    { wall_balls: 6,  farmers: 32, s_lunges: 30, sled_push: 152, sled_pull: 102 },
-  pro_singles_women:  { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
-  relay:              { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 102, sled_pull: 78  },
+  open_doubles_men:   { wall_balls: 6,  farmers: 24, s_lunges: 20, sled_push: 125, sled_pull: 75  },
+  open_doubles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 75,  sled_pull: 50  },
+  pro_doubles_men:    { wall_balls: 9,  farmers: 32, s_lunges: 30, sled_push: 175, sled_pull: 125 },
+  mixed_doubles:      { wall_balls: 6,  farmers: 24, s_lunges: 20, sled_push: 125, sled_pull: 75  },
+  open_singles_men:   { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 125, sled_pull: 75  },
+  open_singles_women: { wall_balls: 4,  farmers: 16, s_lunges: 10, sled_push: 75,  sled_pull: 50  },
+  pro_singles_men:    { wall_balls: 9,  farmers: 32, s_lunges: 30, sled_push: 175, sled_pull: 125 },
+  pro_singles_women:  { wall_balls: 6,  farmers: 24, s_lunges: 20, sled_push: 125, sled_pull: 75  },
+  relay:              { wall_balls: 4,  farmers: 24, s_lunges: 20, sled_push: 125, sled_pull: 75  },
 }
 
 export function getStationLoads(divisionId: DivisionId): StationLoads {
