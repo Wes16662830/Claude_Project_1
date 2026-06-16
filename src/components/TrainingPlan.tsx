@@ -5,7 +5,7 @@ import {
 } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
-  resolveStation, getDivision, getFitnessLevel, resolveLoads, STATION_LABELS,
+  resolveStation, getDivision, getFitnessLevel, resolveLoads, STATION_LABELS, weeksUntilRace,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { fmtTime } from '../data/raceData'
@@ -76,7 +76,20 @@ interface Props {
 }
 
 export default function TrainingPlan({ profile, completed, onToggleComplete }: Props) {
-  const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set([1]))
+  // Compute current plan week from dates
+  const currentWeekNum = (() => {
+    if (!profile.planStartDate) return null
+    const [y, m, d] = profile.planStartDate.split('-').map(Number)
+    const start = new Date(y, m - 1, d)
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const diff = Math.floor((today.getTime() - start.getTime()) / 86400000)
+    if (diff < 0 || diff >= 77) return null
+    return Math.floor(diff / 7) + 1
+  })()
+
+  const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(() =>
+    new Set(currentWeekNum ? [currentWeekNum] : [1])
+  )
   const division = getDivision(profile.division)
   const fitness = getFitnessLevel(profile.fitnessLevel)
   const isSolo = division.athletes === 1
@@ -310,14 +323,20 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
         const rawLoad = WEEK_LOAD[week.week] ?? 50
         const scaledLoad = rawLoad * fitness.volumePct
         const loadPct = scaledLoad / maxLoad
+        const isCurrent = currentWeekNum === week.week
+        const isPast = currentWeekNum !== null && week.week < currentWeekNum
+        const weeksLeft = profile.raceDate ? weeksUntilRace(profile.raceDate) : null
+        const isRaceWeek = weeksLeft === 0 && week.week === 11
 
         return (
-          <div id={`week-${week.week}`} key={week.week} style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, marginBottom: 12, overflow: 'hidden' }}>
+          <div id={`week-${week.week}`} key={week.week} style={{ background: '#111', border: `1px solid ${isCurrent ? '#e8962a55' : '#1e1e1e'}`, borderRadius: 12, marginBottom: 12, overflow: 'hidden', opacity: isPast ? 0.55 : 1, transition: 'opacity 0.2s' }}>
             <div style={weekHeaderStyle(week.phase)} onClick={() => toggle(week.week)}>
               {/* Week number */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: 44, flexShrink: 0 }}>
-                <span style={{ fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px' }}>WEEK</span>
-                <span style={{ fontSize: 24, fontWeight: 900, color: '#f0ede8', lineHeight: 1, letterSpacing: '-1px' }}>
+                <span style={{ fontSize: 10, color: isCurrent ? '#e8962a' : '#555', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {isCurrent ? 'NOW' : 'WEEK'}
+                </span>
+                <span style={{ fontSize: 24, fontWeight: 900, color: isCurrent ? '#e8962a' : '#f0ede8', lineHeight: 1, letterSpacing: '-1px' }}>
                   {String(week.week).padStart(2, '0')}
                 </span>
               </div>
@@ -336,6 +355,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                   </span>
                 </div>
               </div>
+              {isRaceWeek && <div style={{ fontSize: 10, fontWeight: 800, color: '#d63b2f', background: '#d63b2f22', border: '1px solid #d63b2f44', borderRadius: 10, padding: '2px 8px', flexShrink: 0 }}>RACE</div>}
               <div style={phaseBadgeStyle(week.phase)}>{week.phase}</div>
               <div style={{ color: '#555', fontSize: 12, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▶</div>
             </div>

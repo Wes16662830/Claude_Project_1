@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
-import { type Profile } from '../data/profile'
+import { type Profile, weeksUntilRace } from '../data/profile'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
 
@@ -366,16 +366,26 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
 
   // No start date set
   if (!profile.planStartDate) {
+    const weeksLeft = profile.raceDate ? weeksUntilRace(profile.raceDate) : null
     return (
       <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
-        <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>Set your plan start date</div>
+        <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>Set your race date</div>
         <div style={{ fontSize: 14, color: '#666', lineHeight: 1.7, marginBottom: 24 }}>
-          Go to <b style={{ color: '#e8962a' }}>Settings → Races &amp; Targets → Plan Start Date</b> and enter the Monday you began Week 1. This tab will then show today's workout automatically.
+          Go to <b style={{ color: '#e8962a' }}>Settings → Races &amp; Targets → Race Date</b> and pick your event date.
+          The plan start date is calculated automatically — 11 weeks out. If you have fewer weeks, you jump in at the right point.
         </div>
-        <div style={{ fontSize: 12, color: '#444', background: '#111', borderRadius: 8, padding: '12px 16px', textAlign: 'left', lineHeight: 1.7 }}>
-          Tip: The plan is 11 weeks. If you're starting now, enter today's date and begin with Week 1 Monday — the Station Intro Circuit AMRAP.
-        </div>
+        {weeksLeft !== null && (
+          <div style={{ fontSize: 12, color: '#444', background: '#111', borderRadius: 8, padding: '12px 16px', textAlign: 'left', lineHeight: 1.7 }}>
+            {weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until race day.
+            {weeksLeft < 11 ? ` You'll enter at Week ${Math.max(1, 12 - weeksLeft)} of the plan.` : ' Full 11-week plan available.'}
+          </div>
+        )}
+        {!profile.raceDate && (
+          <div style={{ fontSize: 12, color: '#444', background: '#111', borderRadius: 8, padding: '12px 16px', textAlign: 'left', lineHeight: 1.7 }}>
+            Tip: The plan is 11 weeks. Set your race date in Settings and everything will auto-configure.
+          </div>
+        )}
       </div>
     )
   }
@@ -385,15 +395,43 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
     const start = new Date(profile.planStartDate)
     const today = new Date(); today.setHours(0, 0, 0, 0)
     const isBefore = today < start
+    const weeksLeft = profile.raceDate ? weeksUntilRace(profile.raceDate) : null
+    const daysToStart = Math.ceil((start.getTime() - today.getTime()) / 86400000)
+
+    if (!isBefore && weeksLeft !== null && weeksLeft === 0) {
+      // Race week — plan is technically done, but race is this week
+      return (
+        <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+          <div style={{ fontSize: 64, marginBottom: 16 }}>🏆</div>
+          <div style={{ fontSize: 24, fontWeight: 800, color: '#e8962a', marginBottom: 8 }}>Race week!</div>
+          <div style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, marginBottom: 8 }}>
+            11 weeks of work done. Time to race. Trust the training, attack every station, run your own race.
+          </div>
+          <div style={{ fontSize: 13, color: '#666', fontStyle: 'italic' }}>
+            {profile.nextRaceName || 'Race day'} target: {Math.floor(profile.targetFinishSeconds / 60)}:{String(profile.targetFinishSeconds % 60).padStart(2, '0')}
+          </div>
+        </div>
+      )
+    }
+
     return (
       <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
         <div style={{ fontSize: 48, marginBottom: 16 }}>{isBefore ? '⏳' : '🏁'}</div>
         <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>
-          {isBefore ? `Plan starts in ${Math.ceil((start.getTime() - today.getTime()) / 86400000)} days` : 'Plan complete!'}
+          {isBefore
+            ? daysToStart === 1 ? 'Plan starts tomorrow!' : `Plan starts in ${daysToStart} days`
+            : 'Training block complete!'}
         </div>
-        <div style={{ fontSize: 14, color: '#666', lineHeight: 1.6 }}>
-          {isBefore ? 'Get your kit ready. Rest, eat well, and show up on Day 1.' : 'The 11 weeks are done. How did the race go? Update your result in Settings → Segment Splits.'}
+        <div style={{ fontSize: 14, color: '#666', lineHeight: 1.6, marginBottom: 12 }}>
+          {isBefore
+            ? 'Get your kit ready. Rest, eat well, and show up on Day 1.'
+            : 'The 11 weeks are done. How did the race go? Update your result in Settings → Segment Splits.'}
         </div>
+        {weeksLeft !== null && !isBefore && (
+          <div style={{ fontSize: 13, color: '#e8962a', fontWeight: 600 }}>
+            {weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until {profile.nextRaceName || 'race day'}
+          </div>
+        )}
       </div>
     )
   }
@@ -429,8 +467,18 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
         </div>
         <div style={{ fontSize: 14, fontWeight: 600, color: '#888' }}>{DAY_NAMES[pos.dayIndex]}</div>
         <div style={{ fontSize: 12, color: '#666', fontStyle: 'italic' }}>{week.title}</div>
+        {profile.raceDate && (() => {
+          const w = weeksUntilRace(profile.raceDate)
+          if (w === null || w > 11) return null
+          const color = w <= 1 ? '#d63b2f' : w <= 3 ? '#e8962a' : '#888'
+          return (
+            <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color, border: `1px solid ${color}44`, borderRadius: 20, padding: '3px 10px' }}>
+              {w === 0 ? 'RACE WEEK' : `${w}w to race`}
+            </div>
+          )
+        })()}
         {isDone && (
-          <div style={{ marginLeft: 'auto', fontSize: 12, fontWeight: 700, color: '#2a8c5a', background: '#0a120a', border: '1px solid #2a8c5a44', borderRadius: 20, padding: '3px 10px' }}>✓ Done</div>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#2a8c5a', background: '#0a120a', border: '1px solid #2a8c5a44', borderRadius: 20, padding: '3px 10px' }}>✓ Done</div>
         )}
       </div>
 

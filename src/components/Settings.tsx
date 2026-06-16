@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { fmtTime, parseTime } from '../data/raceData'
 import {
   DIVISIONS, EQUIPMENT_CATALOG, FITNESS_LEVELS, getDivision, getStationLoads, DEFAULT_PROFILE,
+  raceDateToPlanStart, weeksUntilRace,
   type Profile, type EquipmentId, type Equipment, type FitnessLevel, type StationLoads,
 } from '../data/profile'
 
@@ -173,8 +174,50 @@ export default function Settings({ profile, setProfile }: Props) {
             <label style={fieldLabel}>Target finish (mm:ss)</label>
             <TimeInput seconds={profile.targetFinishSeconds} onCommit={s => update({ targetFinishSeconds: s })} />
           </div>
+          {/* Race date — drives plan start automatically */}
           <div style={{ gridColumn: '1 / -1' }}>
-            <label style={fieldLabel}>Plan Start Date — Week 1 Monday</label>
+            <label style={fieldLabel}>Race Date</label>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <input
+                type="date"
+                style={{ ...inputStyle, maxWidth: 200 }}
+                value={profile.raceDate ?? ''}
+                onChange={e => {
+                  const raceDate = e.target.value
+                  const derived = raceDateToPlanStart(raceDate)
+                  update({ raceDate, planStartDate: derived })
+                }}
+              />
+              {profile.raceDate && (() => {
+                const weeks = weeksUntilRace(profile.raceDate)
+                if (weeks === null) return <span style={{ fontSize: 12, color: '#d63b2f', fontWeight: 600 }}>Race day passed</span>
+                const entryWeek = Math.max(1, 12 - weeks)
+                return (
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 12, color: weeks <= 2 ? '#d63b2f' : weeks <= 5 ? '#e8962a' : '#2a8c5a', fontWeight: 700 }}>
+                      {weeks === 0 ? 'Race week!' : `${weeks} week${weeks !== 1 ? 's' : ''} to race`}
+                    </span>
+                    {weeks < 11 && (
+                      <span style={{ fontSize: 11, color: '#666' }}>
+                        → entering at Week {entryWeek} of 11
+                      </span>
+                    )}
+                  </div>
+                )
+              })()}
+            </div>
+            <div style={{ fontSize: 11, color: '#555', marginTop: 6, lineHeight: 1.5 }}>
+              Set your race date and the plan start (Week 1 Monday) is calculated automatically — 11 weeks out.
+              If you have fewer than 11 weeks, you'll jump in at the right point in the plan.
+            </div>
+          </div>
+
+          {/* Manual plan start override */}
+          <div style={{ gridColumn: '1 / -1' }}>
+            <label style={fieldLabel}>
+              Week 1 Monday
+              {profile.raceDate && <span style={{ color: '#555', fontWeight: 400 }}> — auto-set from race date</span>}
+            </label>
             <input
               type="date"
               style={{ ...inputStyle, maxWidth: 200 }}
@@ -182,7 +225,7 @@ export default function Settings({ profile, setProfile }: Props) {
               onChange={e => update({ planStartDate: e.target.value })}
             />
             <div style={{ fontSize: 11, color: '#555', marginTop: 6, lineHeight: 1.5 }}>
-              The Monday you begin Week 1. The Today tab uses this to show your current workout automatically.
+              Override if needed. The Today tab uses this date to find your current workout automatically.
             </div>
           </div>
 

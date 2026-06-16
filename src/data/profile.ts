@@ -319,7 +319,8 @@ export interface Profile {
   fitnessLevel: FitnessLevel
   trainingMode: 'solo' | 'partner'
   maxHR: number
-  planStartDate: string        // YYYY-MM-DD — the Monday of Week 1
+  raceDate: string             // YYYY-MM-DD — the actual race day
+  planStartDate: string        // YYYY-MM-DD — the Monday of Week 1 (auto-derived or manual)
   customLoads: StationLoads | null  // null = use division defaults
 }
 
@@ -336,8 +337,37 @@ export const DEFAULT_PROFILE: Profile = {
   fitnessLevel: 'advanced',
   trainingMode: 'partner',
   maxHR: 185,
+  raceDate: '',
   planStartDate: '',
   customLoads: null,
+}
+
+// ---------------------------------------------------------------------------
+// Race date helpers
+// ---------------------------------------------------------------------------
+
+/** Given a race date, compute the Monday that is exactly 11 weeks before it. */
+export function raceDateToPlanStart(raceDate: string): string {
+  if (!raceDate) return ''
+  const [y, m, d] = raceDate.split('-').map(Number)
+  const race = new Date(y, m - 1, d)
+  // 77 days before race = Week 1 Monday (plan is exactly 11 weeks)
+  const approxStart = new Date(race.getTime() - 77 * 86400000)
+  // Snap back to Monday (JS getDay: 0=Sun, 1=Mon … 6=Sat)
+  const dow = approxStart.getDay()
+  const daysBack = dow === 0 ? 6 : dow - 1
+  const monday = new Date(approxStart.getTime() - daysBack * 86400000)
+  return monday.toISOString().split('T')[0]
+}
+
+/** Weeks remaining until race date (0 if today is race day or past). */
+export function weeksUntilRace(raceDate: string): number | null {
+  if (!raceDate) return null
+  const [y, m, d] = raceDate.split('-').map(Number)
+  const race = new Date(y, m - 1, d)
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  const diff = Math.ceil((race.getTime() - today.getTime()) / 86400000)
+  return diff < 0 ? null : Math.floor(diff / 7)
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'
