@@ -357,7 +357,9 @@ export function raceDateToPlanStart(raceDate: string): string {
   const dow = approxStart.getDay()
   const daysBack = dow === 0 ? 6 : dow - 1
   const monday = new Date(approxStart.getTime() - daysBack * 86400000)
-  return monday.toISOString().split('T')[0]
+  // Use local date parts — toISOString() converts to UTC and shifts date in UTC+ timezones
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${monday.getFullYear()}-${pad(monday.getMonth() + 1)}-${pad(monday.getDate())}`
 }
 
 /** Weeks remaining until race date (0 if today is race day or past). */
