@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { fmtTime } from '../data/raceData'
 import { getDivision, type Profile } from '../data/profile'
 import type { PartnerSnapshot } from '../data/progress'
@@ -53,12 +53,40 @@ function tabStyle(active: boolean): React.CSSProperties {
   }
 }
 
+// Detect iOS (Safari doesn't fire beforeinstallprompt)
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent)
+const isInStandaloneMode = 'standalone' in navigator && (navigator as unknown as { standalone: boolean }).standalone
+
 export default function Header({ activeTab, onTabChange, profile, partner }: HeaderProps) {
   const division = getDivision(profile.division)
   const first = (name: string) => name.trim().split(' ')[0] || name
   const title = profile.athlete2.trim()
     ? `${first(profile.athlete1)} + ${first(profile.athlete2)}`
     : first(profile.athlete1) || 'My Hyrox'
+
+  // PWA install prompt (Chrome/Android)
+  const [installPrompt, setInstallPrompt] = useState<Event & { prompt: () => void } | null>(null)
+  const [showIOSHint, setShowIOSHint] = useState(false)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault()
+      setInstallPrompt(e as Event & { prompt: () => void })
+    }
+    window.addEventListener('beforeinstallprompt', handler)
+    return () => window.removeEventListener('beforeinstallprompt', handler)
+  }, [])
+
+  const handleInstall = async () => {
+    if (installPrompt) {
+      installPrompt.prompt()
+      setInstallPrompt(null)
+    } else if (isIOS) {
+      setShowIOSHint(h => !h)
+    }
+  }
+
+  const showInstallBtn = !isInStandaloneMode && (installPrompt !== null || isIOS)
 
   return (
     <header style={headerStyle}>
@@ -71,15 +99,37 @@ export default function Header({ activeTab, onTabChange, profile, partner }: Hea
             {division.label}{profile.lastRaceName ? ` · ${profile.lastRaceName}` : ''}
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
-          <div style={{ fontSize: 22, fontWeight: 800, color: '#e8962a', letterSpacing: '-1px' }}>
-            {fmtTime(profile.targetFinishSeconds)}
-          </div>
-          <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-            {profile.nextRaceName || 'next race'} target
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {showInstallBtn && (
+            <button
+              onClick={handleInstall}
+              style={{
+                background: '#e8962a18', border: '1px solid #e8962a55', borderRadius: 8,
+                padding: '6px 12px', color: '#e8962a', fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
+              }}
+            >
+              <span style={{ fontSize: 14 }}>⬇</span> Install app
+            </button>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#e8962a', letterSpacing: '-1px' }}>
+              {fmtTime(profile.targetFinishSeconds)}
+            </div>
+            <div style={{ fontSize: 11, color: '#666', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              {profile.nextRaceName || 'next race'} target
+            </div>
           </div>
         </div>
       </div>
+
+      {/* iOS install hint */}
+      {showIOSHint && (
+        <div style={{ background: '#1a1400', border: '1px solid #e8962a33', borderRadius: 8, padding: '10px 14px', marginBottom: 10, fontSize: 13, color: '#ccc', lineHeight: 1.6 }}>
+          Tap <b style={{ color: '#e8962a' }}>Share</b> (the box-with-arrow icon at the bottom of Safari), then tap <b style={{ color: '#e8962a' }}>Add to Home Screen</b>.
+        </div>
+      )}
+
       <nav style={{ display: 'flex', gap: 4, borderTop: '1px solid #1a1a1a', overflowX: 'auto' }}>
         {TABS.map(t => (
           <button key={t.id} style={tabStyle(activeTab === t.id)} onClick={() => onTabChange(t.id)}>
