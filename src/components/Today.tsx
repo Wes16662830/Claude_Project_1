@@ -361,7 +361,6 @@ function TimerDisplay({ mode, accentColor }: TDisplayProps) {
 // ─── Main Today Component ────────────────────────────────────────────────────
 
 export default function Today({ profile, completed, onToggleComplete }: Props) {
-  const [showDetail, setShowDetail] = useState(false)
   const pos = getPlanPos(profile.planStartDate)
 
   // No start date set
@@ -517,29 +516,20 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
             )}
           </div>
 
+          {/* Workout detail — always visible */}
+          {(session.detail || notesText) && (
+            <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '16px' }}>
+              {session.detail && (
+                <div style={{ fontSize: 14, color: '#bbb', lineHeight: 1.8, marginBottom: notesText ? 12 : 0, whiteSpace: 'pre-line' }}>{session.detail}</div>
+              )}
+              {notesText && (
+                <div style={{ fontSize: 13, color: colors.text, background: colors.border + '15', borderRadius: 8, padding: '10px 12px', lineHeight: 1.7, borderLeft: `3px solid ${colors.border}` }}>{notesText}</div>
+              )}
+            </div>
+          )}
+
           {/* Timer */}
           <TimerDisplay key={sessionId} mode={timerMode} accentColor={isRace ? '#e8962a' : colors.border} />
-
-          {/* Notes + Detail (collapsible) */}
-          <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12 }}>
-            <button
-              onClick={() => setShowDetail(v => !v)}
-              style={{ width: '100%', padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
-            >
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#aaa' }}>Workout Detail &amp; Notes</span>
-              <span style={{ color: '#555', fontSize: 12, transform: showDetail ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>▶</span>
-            </button>
-            {showDetail && (
-              <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1a1a1a' }}>
-                {session.detail && (
-                  <div style={{ fontSize: 13, color: '#aaa', lineHeight: 1.7, marginTop: 12, marginBottom: notesText ? 12 : 0 }}>{session.detail}</div>
-                )}
-                {notesText && (
-                  <div style={{ fontSize: 12, color: colors.text, background: colors.border + '11', borderRadius: 6, padding: '8px 10px', lineHeight: 1.6 }}>{notesText}</div>
-                )}
-              </div>
-            )}
-          </div>
 
           {/* Mark Done */}
           <button
