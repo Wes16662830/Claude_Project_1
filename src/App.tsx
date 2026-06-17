@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useRegisterSW } from 'virtual:pwa-register/react'
 import Header from './components/Header'
 import Dashboard from './components/Dashboard'
 import TrainingPlan from './components/TrainingPlan'
@@ -11,6 +12,30 @@ import {
   loadCompleted, saveCompleted, loadPartner, savePartner,
   decodeSnapshot, type PartnerSnapshot,
 } from './data/progress'
+
+function UpdateBanner() {
+  const { needRefresh: [needRefresh], updateServiceWorker } = useRegisterSW()
+  if (!needRefresh) return null
+  return (
+    <div style={{
+      position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+      zIndex: 9999, background: '#1a1400', border: '1px solid #e8962a',
+      borderRadius: 12, padding: '12px 20px', display: 'flex', alignItems: 'center',
+      gap: 14, boxShadow: '0 4px 24px #000a', whiteSpace: 'nowrap',
+    }}>
+      <span style={{ fontSize: 13, color: '#f0ede8' }}>New version available</span>
+      <button
+        onClick={() => updateServiceWorker(true)}
+        style={{
+          background: '#e8962a', border: 'none', borderRadius: 8,
+          padding: '7px 16px', color: '#000', fontSize: 13, fontWeight: 700, cursor: 'pointer',
+        }}
+      >
+        Update now
+      </button>
+    </div>
+  )
+}
 
 export default function App() {
   const [tab, setTab] = useState('today')
@@ -43,6 +68,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+      <UpdateBanner />
       <Header activeTab={tab} onTabChange={setTab} profile={profile} partner={partner} />
       <main>
         {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
