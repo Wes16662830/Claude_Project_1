@@ -460,31 +460,16 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
   return (
     <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-      {/* Week + day header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ background: PHASE_COLORS[week.phase] + '22', border: `1px solid ${PHASE_COLORS[week.phase]}44`, borderRadius: 6, padding: '4px 10px', fontSize: 11, fontWeight: 800, color: PHASE_COLORS[week.phase], textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-          Week {pos.weekNum} — {PHASE_LABEL[week.phase] ?? week.phase}
-        </div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#888' }}>{DAY_NAMES[pos.dayIndex]}</div>
-        <div style={{ fontSize: 12, color: '#666', fontStyle: 'italic' }}>{week.title}</div>
-        {profile.raceDate && (() => {
-          const w = weeksUntilRace(profile.raceDate)
-          if (w === null || w > 11) return null
-          const color = w <= 1 ? '#d63b2f' : w <= 3 ? '#e8962a' : '#888'
-          return (
-            <div style={{ marginLeft: 'auto', fontSize: 11, fontWeight: 700, color, border: `1px solid ${color}44`, borderRadius: 20, padding: '3px 10px' }}>
-              {w === 0 ? 'RACE WEEK' : `${w}w to race`}
-            </div>
-          )
-        })()}
-        {isDone && (
-          <div style={{ fontSize: 12, fontWeight: 700, color: '#2a8c5a', background: '#0a120a', border: '1px solid #2a8c5a44', borderRadius: 20, padding: '3px 10px' }}>✓ Done</div>
-        )}
-      </div>
-
       {/* Rest day */}
       {isRest ? (
         <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 16, padding: '32px 24px', textAlign: 'center' }}>
+          {/* Context row */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+            <div style={{ background: PHASE_COLORS[week.phase] + '22', border: `1px solid ${PHASE_COLORS[week.phase]}44`, borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 800, color: PHASE_COLORS[week.phase], textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+              Week {pos.weekNum} — {PHASE_LABEL[week.phase] ?? week.phase}
+            </div>
+            <div style={{ fontSize: 12, color: '#666' }}>{DAY_NAMES[pos.dayIndex]}</div>
+          </div>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🛋️</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 6 }}>{session.title}</div>
           {session.detail && <div style={{ fontSize: 13, color: '#666', marginBottom: 16, lineHeight: 1.6 }}>{session.detail}</div>}
@@ -492,15 +477,39 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
         </div>
       ) : (
         <>
-          {/* Session header card */}
+          {/* Main session tile */}
           <div style={{ background: colors.bg, border: `1px solid ${colors.border}55`, borderRadius: 16, padding: '20px 20px 16px' }}>
-            {session.format && (
-              <div style={{ fontSize: 12, fontWeight: 800, color: '#e8c12a', letterSpacing: '0.5px', marginBottom: 4 }}>{session.format}</div>
-            )}
-            <div style={{ fontSize: 24, fontWeight: 800, color: '#f0ede8', marginBottom: 4, lineHeight: 1.2 }}>{session.title}</div>
-            {session.duration && <div style={{ fontSize: 13, color: '#888' }}>{session.duration}</div>}
+            {/* Context row — small, inside the card */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, flexWrap: 'wrap' }}>
+              <div style={{ background: PHASE_COLORS[week.phase] + '22', border: `1px solid ${PHASE_COLORS[week.phase]}44`, borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 800, color: PHASE_COLORS[week.phase], textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                Week {pos.weekNum} — {PHASE_LABEL[week.phase] ?? week.phase}
+              </div>
+              <div style={{ fontSize: 12, color: '#777' }}>{DAY_NAMES[pos.dayIndex]}</div>
+              <div style={{ fontSize: 11, color: '#555', fontStyle: 'italic' }}>{week.title}</div>
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+                {profile.raceDate && (() => {
+                  const w = weeksUntilRace(profile.raceDate)
+                  if (w === null || w > 11) return null
+                  const color = w <= 1 ? '#d63b2f' : w <= 3 ? '#e8962a' : '#888'
+                  return (
+                    <div style={{ fontSize: 10, fontWeight: 700, color, border: `1px solid ${color}44`, borderRadius: 20, padding: '2px 8px' }}>
+                      {w === 0 ? 'RACE WEEK' : `${w}w to race`}
+                    </div>
+                  )
+                })()}
+                {isDone && (
+                  <div style={{ fontSize: 10, fontWeight: 700, color: '#2a8c5a', background: '#0a120a', border: '1px solid #2a8c5a44', borderRadius: 20, padding: '2px 8px' }}>✓ Done</div>
+                )}
+              </div>
+            </div>
 
-            {/* Motivation — prominent */}
+            {/* Workout — dominant */}
+            {session.format && (
+              <div style={{ fontSize: 12, fontWeight: 800, color: '#e8c12a', letterSpacing: '0.5px', marginBottom: 6 }}>{session.format}</div>
+            )}
+            <div style={{ fontSize: 28, fontWeight: 900, color: '#f0ede8', marginBottom: 4, lineHeight: 1.15, letterSpacing: '-0.5px' }}>{session.title}</div>
+            {session.duration && <div style={{ fontSize: 13, color: '#888', marginBottom: 2 }}>{session.duration}</div>}
+
             {motivation && (
               <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${colors.border}33`, fontSize: 13, color: '#e8c12a', fontStyle: 'italic', lineHeight: 1.6 }}>
                 {motivation}
