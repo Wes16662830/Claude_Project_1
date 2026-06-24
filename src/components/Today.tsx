@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
-import { type Profile, weeksUntilRace } from '../data/profile'
+import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay } from '../data/profile'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
 
@@ -77,14 +77,22 @@ function fmt(secs: number): string {
 
 // ─── Plan position ───────────────────────────────────────────────────────────
 
-function getPlanPos(startDate: string): { weekNum: number; dayIndex: number } | null {
+function getPlanPos(
+  startDate: string,
+  restDays: number[],
+): { weekNum: number; planDayIndex: number; calendarDay: number } | null {
   if (!startDate) return null
   const [y, mo, d] = startDate.split('-').map(Number)
   const start = new Date(y, mo - 1, d)
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const diff = Math.floor((today.getTime() - start.getTime()) / 86400000)
   if (diff < 0 || diff >= 77) return null
-  return { weekNum: Math.floor(diff / 7) + 1, dayIndex: diff % 7 }
+  const calendarDay = diff % 7
+  return {
+    weekNum: Math.floor(diff / 7) + 1,
+    calendarDay,
+    planDayIndex: mapCalendarDayToPlanDay(calendarDay, restDays),
+  }
 }
 
 // ─── Props ────────────────────────────────────────────────────────────────────
@@ -361,7 +369,7 @@ function TimerDisplay({ mode, accentColor }: TDisplayProps) {
 // ─── Main Today Component ────────────────────────────────────────────────────
 
 export default function Today({ profile, completed, onToggleComplete }: Props) {
-  const pos = getPlanPos(profile.planStartDate)
+  const pos = getPlanPos(profile.planStartDate, profile.restDays ?? [2, 4])
 
   // No start date set
   if (!profile.planStartDate) {
@@ -437,7 +445,7 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
 
   const week = TRAINING_PLAN.find(w => w.week === pos.weekNum)
   if (!week) return null
-  const day = week.days[pos.dayIndex]
+  const day = week.days[pos.planDayIndex]
   if (!day) return null
 
   const session = day.session
@@ -446,7 +454,7 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
   const isRest = session.type === 'rest'
   const isRace = rawType === 'race'
   const colors = SESSION_COLORS[type]
-  const sessionId = `w${pos.weekNum}_d${pos.dayIndex}`
+  const sessionId = `w${pos.weekNum}_d${pos.planDayIndex}`
   const isDone = completed.has(sessionId)
   const motivation = SESSION_MOTIVATION[sessionId] ?? ''
   const isSolo = profile.trainingMode === 'solo'
@@ -467,7 +475,7 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
             <div style={{ background: PHASE_COLORS[week.phase] + '22', border: `1px solid ${PHASE_COLORS[week.phase]}44`, borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 800, color: PHASE_COLORS[week.phase], textTransform: 'uppercase', letterSpacing: '0.8px' }}>
               Week {pos.weekNum} — {PHASE_LABEL[week.phase] ?? week.phase}
             </div>
-            <div style={{ fontSize: 12, color: '#666' }}>{DAY_NAMES[pos.dayIndex]}</div>
+            <div style={{ fontSize: 12, color: '#666' }}>{DAY_NAMES[pos.calendarDay]}</div>
           </div>
           <div style={{ fontSize: 48, marginBottom: 12 }}>🛋️</div>
           <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 6 }}>{session.title}</div>
@@ -483,7 +491,7 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
               <div style={{ background: PHASE_COLORS[week.phase] + '22', border: `1px solid ${PHASE_COLORS[week.phase]}44`, borderRadius: 6, padding: '3px 8px', fontSize: 10, fontWeight: 800, color: PHASE_COLORS[week.phase], textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                 Week {pos.weekNum} — {PHASE_LABEL[week.phase] ?? week.phase}
               </div>
-              <div style={{ fontSize: 12, color: '#777' }}>{DAY_NAMES[pos.dayIndex]}</div>
+              <div style={{ fontSize: 12, color: '#777' }}>{DAY_NAMES[pos.calendarDay]}</div>
               <div style={{ fontSize: 11, color: '#555', fontStyle: 'italic' }}>{week.title}</div>
               <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
                 {profile.raceDate && (() => {

@@ -321,6 +321,7 @@ export interface Profile {
   maxHR: number
   raceDate: string             // YYYY-MM-DD — the actual race day
   planStartDate: string        // YYYY-MM-DD — the Monday of Week 1 (auto-derived or manual)
+  restDays: number[]           // day indexes (0=Mon … 6=Sun) the user wants as rest, e.g. [2,4]
   customLoads: StationLoads | null  // null = use division defaults
 }
 
@@ -339,6 +340,7 @@ export const DEFAULT_PROFILE: Profile = {
   maxHR: 185,
   raceDate: '',
   planStartDate: '',
+  restDays: [2, 4],   // Wednesday and Friday
   customLoads: null,
 }
 
@@ -370,6 +372,32 @@ export function weeksUntilRace(raceDate: string): number | null {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const diff = Math.ceil((race.getTime() - today.getTime()) / 86400000)
   return diff < 0 ? null : Math.floor(diff / 7)
+}
+
+// ---------------------------------------------------------------------------
+// Rest day remapping
+// ---------------------------------------------------------------------------
+
+// The training plan data always has rest sessions at these positions (Wed=2, Fri=4).
+export const PLAN_REST_DAYS = [2, 4]
+
+/**
+ * Given the calendar day relative to the week's Monday (0=Mon … 6=Sun) and
+ * the user's preferred rest days, return the plan day index whose session
+ * should be shown.  This lets users shift their rest days without changing
+ * the session content or IDs.
+ */
+export function mapCalendarDayToPlanDay(calendarDay: number, userRestDays: number[]): number {
+  // Plan's workout day positions in order: [0,1,3,5,6] (Mon,Tue,Thu,Sat,Sun)
+  const planWorkoutDays = [0,1,2,3,4,5,6].filter(d => !PLAN_REST_DAYS.includes(d))
+  // User's workout days in calendar order
+  const userWorkoutDays = [0,1,2,3,4,5,6].filter(d => !userRestDays.includes(d))
+
+  if (userRestDays.includes(calendarDay)) {
+    return PLAN_REST_DAYS[0] // point at a plan rest session
+  }
+  const slot = userWorkoutDays.indexOf(calendarDay)
+  return planWorkoutDays[slot] ?? PLAN_REST_DAYS[0]
 }
 
 const STORAGE_KEY = 'hyrox-profile-v2'

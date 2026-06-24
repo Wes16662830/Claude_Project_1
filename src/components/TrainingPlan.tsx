@@ -6,6 +6,7 @@ import {
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
   resolveStation, getDivision, getFitnessLevel, resolveLoads, STATION_LABELS, weeksUntilRace,
+  mapCalendarDayToPlanDay, PLAN_REST_DAYS,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { fmtTime } from '../data/raceData'
@@ -363,7 +364,10 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
             {open && (
               <>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 10, padding: '0 20px 16px' }}>
-                {week.days.map((d, dayIdx) => {
+                {[0,1,2,3,4,5,6].map(calDay => {
+                  const planIdx = mapCalendarDayToPlanDay(calDay, profile.restDays ?? PLAN_REST_DAYS)
+                  const d = week.days[planIdx] ?? week.days[PLAN_REST_DAYS[0]]
+                  const dayIdx = planIdx  // keep original plan index for IDs/motivations
                   const s = d.session
                   const rawType = s.type as string
                   const type: SessionType = rawType === 'race' ? 'sim' : s.type
@@ -384,7 +388,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                   const isDone = completed.has(sessionId)
 
                   return (
-                    <div key={d.day} style={{
+                    <div key={calDay} style={{
                       ...dayCardStyle(type),
                       ...(isRace ? { borderColor: '#e8962a', background: '#2d1e00' } : {}),
                       ...(isDone ? { opacity: 0.75, borderColor: '#2a8c5a55' } : {}),
@@ -393,7 +397,9 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                       {/* Day + Hyrox type badge + Done toggle */}
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 6 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>{d.day}</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>
+                            {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][calDay]}
+                          </div>
                           {!isRest && (
                             <button
                               onClick={() => onToggleComplete(sessionId)}

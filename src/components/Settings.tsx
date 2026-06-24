@@ -282,6 +282,52 @@ export default function Settings({ profile, setProfile }: Props) {
         ))}
       </div>
 
+      {/* Rest Days */}
+      <div style={card}>
+        <div style={sectionTitle}>Rest Days</div>
+        <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
+          Choose which 2 days you want to rest each week. The plan's 5 workouts shift to fill your training days automatically.
+          {profile.restDays?.length !== 2 && <span style={{ color: '#d63b2f', fontWeight: 600 }}> Select exactly 2 days.</span>}
+        </div>
+        {(() => {
+          const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+          const selected: number[] = profile.restDays ?? [2, 4]
+          const toggle = (day: number) => {
+            if (selected.includes(day)) {
+              // Don't go below 1
+              if (selected.length <= 1) return
+              update({ restDays: selected.filter(d => d !== day) })
+            } else {
+              // Max 2: drop oldest if already at 2
+              const next = selected.length >= 2 ? [...selected.slice(1), day] : [...selected, day]
+              update({ restDays: next.sort((a, b) => a - b) })
+            }
+          }
+          return (
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {DAY_LABELS.map((label, i) => {
+                const on = selected.includes(i)
+                return (
+                  <button
+                    key={i}
+                    onClick={() => toggle(i)}
+                    style={{
+                      padding: '10px 16px', borderRadius: 8, fontSize: 13, fontWeight: on ? 700 : 400,
+                      cursor: 'pointer', border: `1px solid ${on ? '#e8962a' : '#2a2a2a'}`,
+                      background: on ? '#e8962a22' : '#0a0a0a',
+                      color: on ? '#e8962a' : '#666',
+                      transition: 'all 0.12s',
+                    }}
+                  >
+                    {on ? '✕ ' : ''}{label}
+                  </button>
+                )
+              })}
+            </div>
+          )
+        })()}
+      </div>
+
       {/* Station Loads */}
       <div style={card}>
         <div style={sectionTitle}>Station Loads</div>
