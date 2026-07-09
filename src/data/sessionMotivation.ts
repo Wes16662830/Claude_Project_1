@@ -17,7 +17,7 @@ export const SESSION_MOTIVATION: Record<string, string> = {
   'w2_d0': 'The row pyramid is where the 1:02 lives. Top SA teams pull ~1:58/500m on the row — today is step one toward that. Even effort across every level.',
   'w2_d1': 'Faster than race pace. Every 800m interval is a deposit into the "race feels like cruise control" account. It pays out in Cape Town.',
   'w2_d2': 'The aerobic gains happen during recovery, not the session. Honour it.',
-  'w2_d3': 'The odd/even structure forces running while your legs are still pumping from the station. This is exactly what race day feels like — today you face it on purpose. Watch the 400m splits drift. That drift is the training.',
+  'w2_d3': 'The odd/even structure forces running while your legs are still pumping from the station. This is exactly what race day feels like — today you face it on purpose. Watch the run splits drift. That drift is the training.',
   'w2_d4': 'Full rest. The benchmark session tomorrow needs fresh legs.',
   'w2_d5': 'This number is your starting point. Write it down. Every week in this plan is aimed at making it irrelevant by April.',
   'w2_d6': '70 minutes in Zone 2. The long run doesn\'t care how fit you think you are. It just builds the engine that carries you across 8km in race conditions.',
