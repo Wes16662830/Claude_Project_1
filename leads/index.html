@@ -242,6 +242,31 @@
   }
   .type-opt.active { border-color: var(--green); background: var(--green); color: #fff; }
 
+  .scan-cta {
+    background: #fff; border: 1.5px dashed var(--gold-dark);
+    border-radius: var(--radius); padding: 12px; margin-bottom: 16px;
+  }
+  .scan-hint { font-size: 12px; color: var(--muted); margin-top: 8px; line-height: 1.45; text-align: center; }
+
+  .ocr-overlay {
+    position: fixed; inset: 0; background: rgba(10,20,15,0.55);
+    z-index: 80; display: none; align-items: center; justify-content: center; padding: 24px;
+  }
+  .ocr-overlay.open { display: flex; }
+  .ocr-box {
+    background: var(--cream); border-radius: 16px; padding: 26px 22px;
+    max-width: 320px; width: 100%; text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  }
+  .ocr-spinner {
+    width: 34px; height: 34px; margin: 0 auto 14px;
+    border: 3.5px solid var(--line); border-top-color: var(--green);
+    border-radius: 50%; animation: ocr-spin 0.8s linear infinite;
+  }
+  @keyframes ocr-spin { to { transform: rotate(360deg); } }
+  .ocr-status { font-size: 14.5px; font-weight: 600; color: var(--ink); line-height: 1.4; }
+  .ocr-substatus { font-size: 12.5px; color: var(--muted); margin-top: 6px; }
+
   .photo-area {
     display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
   }
@@ -366,6 +391,10 @@
       <button class="link-btn" id="formSave">Save</button>
     </div>
     <div class="sheet-body">
+      <div class="scan-cta">
+        <button class="btn primary block" id="scanCardBtn">📇 Scan Business Card</button>
+        <div class="scan-hint">Snap a photo of a card to auto-fill the fields below — first scan downloads a one-time ~6MB offline text-reader, then works with no signal</div>
+      </div>
       <div class="photo-area">
         <div class="photo-preview" id="photoPreview">📷</div>
         <div class="photo-btns">
@@ -376,6 +405,7 @@
       </div>
       <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" />
       <input type="file" id="libraryInput" accept="image/*" style="display:none" />
+      <input type="file" id="scanInput" accept="image/*" capture="environment" style="display:none" />
 
       <div class="field">
         <label>Type</label>
@@ -453,8 +483,17 @@
 
 <div class="toast" id="toast"></div>
 
+<div class="ocr-overlay" id="ocrOverlay">
+  <div class="ocr-box">
+    <div class="ocr-spinner"></div>
+    <div class="ocr-status" id="ocrStatus">Reading card…</div>
+    <div class="ocr-substatus" id="ocrSubstatus"></div>
+  </div>
+</div>
+
 <script src="./vendor/jszip.min.js"></script>
 <script src="./vendor/xlsx.mini.min.js"></script>
+<script src="./vendor/tesseract/tesseract.min.js"></script>
 <script>
 (function () {
   "use strict";
@@ -790,6 +829,148 @@
   }
   $('cameraInput').addEventListener('change', function () { handlePhotoFile(this); });
   $('libraryInput').addEventListener('change', function () { handlePhotoFile(this); });
+
+  // ---------- business card scan (on-device OCR, fully offline after first use) ----------
+  var ocrWorkerPromise = null;
+  function getOcrWorker(onProgress) {
+    if (!ocrWorkerPromise) {
+      ocrWorkerPromise = Tesseract.createWorker('eng', 1, {
+        corePath: './vendor/tesseract',
+        langPath: './vendor/tesseract/lang',
+        workerPath: './vendor/tesseract/worker.min.js',
+        logger: onProgress
+      });
+    }
+    return ocrWorkerPromise;
+  }
+
+  function setOcrStatus(status, substatus) {
+    $('ocrStatus').textContent = status;
+    $('ocrSubstatus').textContent = substatus || '';
+  }
+
+  var ORG_WORDS = /\b(ltd|llc|inc|incorporated|co\.?|company|group|enterprises?|ventures?|solutions|limited|corporation|corp|holdings?|partners|associates|agency|foundation|ngo|sacco|consult(?:ing|ants)?|logistics|industries|trading|imports?|exports?|farm|farms|safaris|tours?|hotel|lodge|bank|insurance|university|college|school|hospital|clinic|church|ministries)\b/i;
+  var ROLE_WORDS = /\b(manager|director|officer|ceo|cto|cfo|coo|founder|co-founder|president|owner|chairman|chairperson|consultant|coordinator|specialist|engineer|analyst|assistant|executive|head of|lead|supervisor|representative|sales rep|agent|administrator|secretary|treasurer|accountant|advisor|adviser|proprietor)\b/i;
+  var EMAIL_RE = /[a-zA-Z0-9.+_-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9.-]+/;
+  var PHONE_RE = /(\+?\d[\d\s().-]{6,}\d)/g;
+  var URL_RE = /\b((?:https?:\/\/)?(?:www\.)?[a-z0-9-]+\.(?:com|org|net|co|co\.ke|co\.uk|io|info|biz)(?:\/[^\s,;]*)?)\b/gi;
+
+  function parseCardText(rawText) {
+    var lines = rawText.split(/\r?\n/).map(function (l) { return l.replace(/\s+/g, ' ').trim(); }).filter(Boolean);
+
+    var emailMatch = rawText.match(EMAIL_RE);
+    var email = emailMatch ? emailMatch[0].replace(/^[.,;:]+|[.,;:]+$/g, '') : '';
+
+    var phoneMatches = rawText.match(PHONE_RE) || [];
+    var phone = '';
+    for (var i = 0; i < phoneMatches.length; i++) {
+      var digits = phoneMatches[i].replace(/\D/g, '');
+      if (digits.length >= 7 && digits.length <= 15) { phone = phoneMatches[i].trim(); break; }
+    }
+
+    var website = '';
+    var emailStart = emailMatch ? emailMatch.index : -1;
+    var emailEnd = emailMatch ? emailStart + emailMatch[0].length : -1;
+    var urlMatch;
+    URL_RE.lastIndex = 0;
+    while ((urlMatch = URL_RE.exec(rawText)) !== null) {
+      var overlapsEmail = emailMatch && urlMatch.index >= emailStart - 1 && urlMatch.index < emailEnd;
+      if (!overlapsEmail) { website = urlMatch[0]; break; }
+    }
+
+    var leftover = lines.filter(function (l) {
+      if (email && l.indexOf(email) !== -1) return false;
+      if (phone && l.indexOf(phone) !== -1) return false;
+      if (website && l.indexOf(website) !== -1) return false;
+      if (/^[\d\s+().-]{5,}$/.test(l)) return false; // stray number-only lines
+      return l.length > 1;
+    });
+
+    var name = '', organization = '', role = '';
+    var remaining = leftover.slice();
+
+    for (var j = 0; j < remaining.length; j++) {
+      if (ROLE_WORDS.test(remaining[j])) { role = remaining[j]; remaining.splice(j, 1); break; }
+    }
+    for (var k = 0; k < remaining.length; k++) {
+      if (ORG_WORDS.test(remaining[k])) { organization = remaining[k]; remaining.splice(k, 1); break; }
+    }
+    if (!organization && remaining.length) {
+      for (var m = 0; m < remaining.length; m++) {
+        var words = remaining[m].split(' ').filter(Boolean);
+        var isAllCaps = remaining[m] === remaining[m].toUpperCase() && /[A-Z]/.test(remaining[m]);
+        if (isAllCaps && words.length >= 2) { organization = remaining[m]; remaining.splice(m, 1); break; }
+      }
+    }
+    for (var n = 0; n < remaining.length; n++) {
+      var w = remaining[n].split(' ').filter(Boolean);
+      if (w.length >= 2 && w.length <= 4 && !/\d/.test(remaining[n])) { name = remaining[n]; remaining.splice(n, 1); break; }
+    }
+    if (!name && remaining.length) { name = remaining.shift(); }
+    if (!organization && remaining.length) { organization = remaining.shift(); }
+
+    return { name: name, organization: organization, role: role, phone: phone, email: email, website: website };
+  }
+
+  $('scanCardBtn').addEventListener('click', function () { $('scanInput').click(); });
+
+  $('scanInput').addEventListener('change', async function () {
+    var file = this.files && this.files[0];
+    this.value = '';
+    if (!file) return;
+
+    $('ocrOverlay').classList.add('open');
+    setOcrStatus('Preparing text reader…', 'First scan downloads a one-time offline model (~6MB)');
+
+    // Attach the photo regardless of whether text extraction below succeeds —
+    // a failed OCR read shouldn't mean losing an otherwise-usable photo.
+    try {
+      currentPhotoBlob = await resizeImage(file, 1280, 0.8);
+      currentPhotoRemoved = false;
+      updatePhotoPreview();
+    } catch (e) { /* best effort */ }
+
+    var ocrFailed = false;
+    var parsed = null;
+    try {
+      var worker = await getOcrWorker(function (m) {
+        if (m.status === 'recognizing text') {
+          setOcrStatus('Reading card…', Math.round((m.progress || 0) * 100) + '%');
+        } else if (m.status) {
+          setOcrStatus('Preparing text reader…', m.status);
+        }
+      });
+
+      setOcrStatus('Reading card…', '');
+      var result = await worker.recognize(file);
+      parsed = parseCardText(result.data.text || '');
+    } catch (err) {
+      ocrFailed = true;
+    }
+
+    if (parsed) {
+      if (parsed.name) $('fName').value = parsed.name;
+      if (parsed.organization) $('fOrg').value = parsed.organization;
+      if (parsed.role) $('fRole').value = parsed.role;
+      if (parsed.phone) $('fPhone').value = parsed.phone;
+      if (parsed.email) $('fEmail').value = parsed.email;
+      if (parsed.website) {
+        var existingNotes = $('fNotes').value.trim();
+        if (existingNotes.indexOf(parsed.website) === -1) {
+          $('fNotes').value = existingNotes ? existingNotes + '\n' + parsed.website : parsed.website;
+        }
+      }
+    }
+
+    $('ocrOverlay').classList.remove('open');
+
+    if (ocrFailed) {
+      toast('Could not read that card, but the photo was saved — fill the details in manually');
+    } else {
+      var gotAnything = parsed && (parsed.name || parsed.organization || parsed.phone || parsed.email);
+      toast(gotAnything ? 'Filled from card — please check the details' : 'Could not read much — try a clearer, well-lit photo');
+    }
+  });
 
   $('useLocationBtn').addEventListener('click', function () {
     if (!navigator.geolocation) { toast('Location not available on this device'); return; }
