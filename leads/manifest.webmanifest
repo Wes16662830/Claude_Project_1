@@ -1,7 +1,7 @@
 {
-  "name": "Kenya Leads & Contacts",
-  "short_name": "Kenya Leads",
-  "description": "Capture leads and contacts with photos while traveling in Kenya, and export to Excel.",
+  "name": "Leads & Contacts",
+  "short_name": "Leads",
+  "description": "Capture leads and contacts with photos in the field, and export to Excel.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

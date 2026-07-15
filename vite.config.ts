@@ -41,7 +41,7 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-        navigateFallbackDenylist: [/^\/Claude_Project_1\/kenya-leads\//],
+        navigateFallbackDenylist: [/^\/Claude_Project_1\/leads\//, /^\/Claude_Project_1\/kenya-leads\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

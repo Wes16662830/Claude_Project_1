@@ -1,4 +1,4 @@
-const CACHE = 'kenya-leads-v1';
+const CACHE = 'leads-v1';
 const ASSETS = [
   './',
   './index.html',

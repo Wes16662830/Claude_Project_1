@@ -1,0 +1,1013 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Leads &amp; Contacts</title>
+<meta name="description" content="Capture leads and contacts with photos in the field, export to Excel." />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Leads" />
+<meta name="theme-color" content="#0F4C3A" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./icon-192.png" />
+<link rel="icon" href="./icon-192.png" />
+<style>
+  :root {
+    --green: #0F4C3A;
+    --green-dark: #0A3729;
+    --gold: #D4A344;
+    --gold-dark: #B4863A;
+    --cream: #FAF7F0;
+    --card: #FFFFFF;
+    --ink: #23291F;
+    --muted: #6B6459;
+    --line: #E7E0D2;
+    --danger: #B4433A;
+    --radius: 14px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  * , *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--cream);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    padding-bottom: calc(24px + var(--safe-bottom));
+  }
+  button { font-family: inherit; }
+  input, textarea, select { font-family: inherit; }
+
+  header.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: linear-gradient(180deg, var(--green) 0%, var(--green-dark) 100%);
+    color: #fff;
+    padding: calc(14px + var(--safe-top)) 16px 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  }
+  .topbar-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .brand h1 { font-size: 17px; margin: 0; font-weight: 700; letter-spacing: 0.2px; }
+  .brand .sub { font-size: 12px; color: rgba(255,255,255,0.72); margin-top: 1px; }
+  .topbar-actions { display: flex; gap: 8px; flex-shrink: 0; }
+  .icon-btn {
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.22);
+    color: #fff;
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    cursor: pointer;
+  }
+  .icon-btn:active { background: rgba(255,255,255,0.26); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 14px 16px 100px; }
+
+  .toolbar {
+    display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .search-wrap { position: relative; flex: 1 1 220px; }
+  .search-wrap input {
+    width: 100%;
+    padding: 11px 14px 11px 36px;
+    border-radius: 12px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 15px;
+    color: var(--ink);
+  }
+  .search-wrap::before {
+    content: "🔎";
+    position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+    font-size: 14px; opacity: 0.55;
+  }
+  .chip-row { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; -webkit-overflow-scrolling: touch; }
+  .chip {
+    flex-shrink: 0;
+    padding: 8px 13px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  .stat-row { display: flex; gap: 10px; margin: 12px 0 16px; }
+  .stat {
+    flex: 1;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 10px 12px;
+  }
+  .stat .n { font-size: 20px; font-weight: 800; color: var(--green); }
+  .stat .l { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+  }
+  .empty .big { font-size: 40px; margin-bottom: 10px; }
+  .empty h2 { font-size: 17px; color: var(--ink); margin: 0 0 6px; }
+  .empty p { font-size: 14px; margin: 0 0 18px; line-height: 1.5; }
+
+  .lead-list { display: flex; flex-direction: column; gap: 10px; }
+  .lead-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    cursor: pointer;
+  }
+  .lead-card:active { background: #F5F1E7; }
+  .thumb {
+    width: 54px; height: 54px; border-radius: 12px;
+    background: var(--line);
+    flex-shrink: 0;
+    object-fit: cover;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    color: var(--muted);
+  }
+  .lead-info { flex: 1; min-width: 0; }
+  .lead-top { display: flex; align-items: center; gap: 8px; }
+  .lead-name { font-weight: 700; font-size: 15.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge {
+    font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+    flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .badge.Lead { background: #FDF0DA; color: #96690F; }
+  .badge.Contact { background: #E4F0EA; color: #1A6B4A; }
+  .badge.Partner { background: #E7E9F7; color: #40469C; }
+  .badge.Vendor { background: #F7E7EA; color: #9C4053; }
+  .badge.Other { background: #EDEAE3; color: #6B6459; }
+  .lead-sub { font-size: 13px; color: var(--muted); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lead-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .chevron { color: var(--muted); font-size: 18px; flex-shrink: 0; }
+
+  .fab {
+    position: fixed;
+    right: 20px;
+    bottom: calc(22px + var(--safe-bottom));
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: var(--gold);
+    color: var(--green-dark);
+    border: none;
+    font-size: 28px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    z-index: 25;
+  }
+  .fab:active { background: var(--gold-dark); }
+
+  .sheet-overlay {
+    position: fixed; inset: 0; background: rgba(10,20,15,0.45);
+    z-index: 40; display: none;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .sheet-overlay.open { display: flex; }
+  .sheet {
+    background: var(--cream);
+    width: 100%;
+    max-width: 640px;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: calc(24px + var(--safe-bottom));
+    animation: slideup .22s ease-out;
+  }
+  @keyframes slideup { from { transform: translateY(24px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .sheet-header {
+    position: sticky; top: 0;
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 18px 10px;
+    border-bottom: 1px solid var(--line);
+    z-index: 2;
+  }
+  .sheet-header h2 { margin: 0; font-size: 17px; }
+  .link-btn { background: none; border: none; color: var(--green); font-size: 15px; font-weight: 600; cursor: pointer; padding: 6px; }
+  .link-btn.danger { color: var(--danger); }
+  .sheet-body { padding: 16px 18px 6px; }
+
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 6px; }
+  .field input[type=text], .field input[type=tel], .field input[type=email], .field textarea, .field select {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--line);
+    background: #fff;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .field textarea { min-height: 78px; resize: vertical; }
+  .type-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+  .type-opt {
+    padding: 9px 14px; border-radius: 10px; border: 1.5px solid var(--line);
+    background: #fff; font-size: 14px; font-weight: 600; color: var(--muted); cursor: pointer;
+  }
+  .type-opt.active { border-color: var(--green); background: var(--green); color: #fff; }
+
+  .photo-area {
+    display: flex; align-items: center; gap: 14px; margin-bottom: 16px;
+  }
+  .photo-preview {
+    width: 96px; height: 96px; border-radius: 14px;
+    background: #fff; border: 1.5px dashed var(--line);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; flex-shrink: 0; color: var(--muted); font-size: 26px;
+  }
+  .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+  .photo-btns { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .btn {
+    padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line);
+    background: #fff; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn.primary { background: var(--green); border-color: var(--green); color: #fff; }
+  .btn.block { width: 100%; padding: 13px; font-size: 15.5px; }
+  .btn.ghost { background: transparent; }
+  .location-row { display: flex; gap: 8px; }
+  .location-row input { flex: 1; }
+  .loc-btn {
+    flex-shrink: 0; width: 44px; border-radius: 10px; border: 1px solid var(--line);
+    background: #fff; font-size: 17px; cursor: pointer;
+  }
+
+  .toast {
+    position: fixed; left: 50%; bottom: calc(24px + var(--safe-bottom));
+    transform: translateX(-50%) translateY(10px);
+    background: var(--ink); color: #fff;
+    padding: 11px 18px; border-radius: 999px;
+    font-size: 14px; font-weight: 600;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    z-index: 60; opacity: 0; transition: opacity .2s, transform .2s;
+    pointer-events: none;
+    max-width: 88vw;
+    text-align: center;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .action-sheet-list { padding: 4px 18px 4px; }
+  .action-item {
+    width: 100%; text-align: left; padding: 14px 4px; border: none; background: none;
+    border-bottom: 1px solid var(--line); font-size: 16px; color: var(--ink); cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .action-item:last-child { border-bottom: none; }
+  .action-item .desc { display: block; font-size: 12.5px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .action-item.danger { color: var(--danger); }
+
+  #photoDetail { text-align: center; margin-bottom: 14px; }
+  #photoDetail img { max-width: 100%; max-height: 260px; border-radius: 14px; object-fit: cover; }
+
+  .offline-pill {
+    display: none;
+    max-width: 900px; margin: 0 auto 10px; padding: 8px 12px;
+    background: #FDF0DA; color: #96690F; border-radius: 10px; font-size: 12.5px; font-weight: 600;
+    text-align: center;
+  }
+  .offline-pill.show { display: block; }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <div class="brand-mark">📍</div>
+      <div>
+        <h1>Leads</h1>
+        <div class="sub" id="headerSub">0 saved · stored on this device</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="exportBtn" title="Export">⬆️</button>
+      <button class="icon-btn" id="menuBtn" title="Menu">⋯</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="offline-pill" id="offlinePill">You're offline — that's fine, everything is saved on this device.</div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search name, org, phone, notes…" />
+    </div>
+  </div>
+  <div class="chip-row" id="chipRow">
+    <div class="chip active" data-type="All">All</div>
+    <div class="chip" data-type="Lead">Leads</div>
+    <div class="chip" data-type="Contact">Contacts</div>
+    <div class="chip" data-type="Partner">Partners</div>
+    <div class="chip" data-type="Vendor">Vendors</div>
+    <div class="chip" data-type="Other">Other</div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><div class="n" id="statTotal">0</div><div class="l">Total</div></div>
+    <div class="stat"><div class="n" id="statPhotos">0</div><div class="l">With photo</div></div>
+    <div class="stat"><div class="n" id="statToday">0</div><div class="l">Today</div></div>
+  </div>
+
+  <div id="listArea">
+    <div class="empty" id="emptyState">
+      <div class="big">🌍</div>
+      <h2>No leads captured yet</h2>
+      <p>Tap the gold + button to add your first contact or lead —<br/>works fully offline, right here on your iPad.</p>
+    </div>
+    <div class="lead-list" id="leadList"></div>
+  </div>
+</main>
+
+<button class="fab" id="addFab" title="Add lead">+</button>
+
+<!-- Add / Edit sheet -->
+<div class="sheet-overlay" id="formOverlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <button class="link-btn" id="formCancel">Cancel</button>
+      <h2 id="formTitle">New Lead</h2>
+      <button class="link-btn" id="formSave">Save</button>
+    </div>
+    <div class="sheet-body">
+      <div class="photo-area">
+        <div class="photo-preview" id="photoPreview">📷</div>
+        <div class="photo-btns">
+          <button class="btn" id="takePhotoBtn">📷 Take Photo</button>
+          <button class="btn" id="pickPhotoBtn">🖼️ Choose Existing</button>
+          <button class="btn ghost" id="removePhotoBtn" style="display:none;color:#B4433A;">Remove Photo</button>
+        </div>
+      </div>
+      <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" />
+      <input type="file" id="libraryInput" accept="image/*" style="display:none" />
+
+      <div class="field">
+        <label>Type</label>
+        <div class="type-grid" id="typeGrid">
+          <div class="type-opt active" data-type="Lead">Lead</div>
+          <div class="type-opt" data-type="Contact">Contact</div>
+          <div class="type-opt" data-type="Partner">Partner</div>
+          <div class="type-opt" data-type="Vendor">Vendor</div>
+          <div class="type-opt" data-type="Other">Other</div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Full Name *</label>
+        <input type="text" id="fName" placeholder="e.g. Wanjiru Kamau" />
+      </div>
+      <div class="field">
+        <label>Organization</label>
+        <input type="text" id="fOrg" placeholder="Company / group" />
+      </div>
+      <div class="field">
+        <label>Role / Title</label>
+        <input type="text" id="fRole" placeholder="e.g. Program Manager" />
+      </div>
+      <div class="field">
+        <label>Phone</label>
+        <input type="tel" id="fPhone" placeholder="+254 7…" />
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="fEmail" placeholder="name@example.com" />
+      </div>
+      <div class="field">
+        <label>Location</label>
+        <div class="location-row">
+          <input type="text" id="fLocation" placeholder="e.g. City, Country" />
+          <button class="loc-btn" id="useLocationBtn" title="Use current GPS location">📍</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Notes</label>
+        <textarea id="fNotes" placeholder="Context, follow-up items, how you met…"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detail sheet -->
+<div class="sheet-overlay" id="detailOverlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <button class="link-btn" id="detailClose">Close</button>
+      <h2 id="detailTitle">Lead</h2>
+      <button class="link-btn" id="detailEdit">Edit</button>
+    </div>
+    <div class="sheet-body">
+      <div id="photoDetail"></div>
+      <div id="detailFields"></div>
+      <button class="btn block" style="margin-top:8px;color:#B4433A;border-color:#B4433A;" id="detailDelete">Delete Lead</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic action sheet (export / menu) -->
+<div class="sheet-overlay" id="actionOverlay">
+  <div class="sheet">
+    <div class="sheet-header">
+      <button class="link-btn" id="actionCancel">Cancel</button>
+      <h2 id="actionTitle">Actions</h2>
+      <span style="width:50px;"></span>
+    </div>
+    <div class="action-sheet-list" id="actionList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="./vendor/jszip.min.js"></script>
+<script src="./vendor/xlsx.mini.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var DB_NAME = 'kenya-leads-db';
+  var DB_VERSION = 1;
+  var STORE = 'leads';
+  var db = null;
+
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function (e) {
+        var _db = e.target.result;
+        if (!_db.objectStoreNames.contains(STORE)) {
+          var store = _db.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+          store.createIndex('createdAt', 'createdAt');
+        }
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function tx(mode) {
+    return db.transaction(STORE, mode).objectStore(STORE);
+  }
+
+  function addLead(lead) {
+    return new Promise(function (resolve, reject) {
+      var req = tx('readwrite').add(lead);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function putLead(lead) {
+    return new Promise(function (resolve, reject) {
+      var req = tx('readwrite').put(lead);
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function deleteLead(id) {
+    return new Promise(function (resolve, reject) {
+      var req = tx('readwrite').delete(id);
+      req.onsuccess = function () { resolve(); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function getAllLeads() {
+    return new Promise(function (resolve, reject) {
+      var req = tx('readonly').getAll();
+      req.onsuccess = function () { resolve(req.result || []); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  // ---------- state ----------
+  var allLeads = [];
+  var activeType = 'All';
+  var searchTerm = '';
+  var editingId = null;
+  var currentPhotoBlob = null;
+  var currentPhotoRemoved = false;
+  var detailLeadId = null;
+  var objectUrls = [];
+
+  function trackUrl(url) { objectUrls.push(url); return url; }
+  function revokeAllUrls() {
+    objectUrls.forEach(function (u) { try { URL.revokeObjectURL(u); } catch (e) {} });
+    objectUrls = [];
+  }
+
+  // ---------- helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function toast(msg, ms) {
+    var t = $('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast._h);
+    toast._h = setTimeout(function () { t.classList.remove('show'); }, ms || 2200);
+  }
+  function dateStamp(d) {
+    d = d || new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function isToday(iso) {
+    var d = new Date(iso), n = new Date();
+    return d.getFullYear() === n.getFullYear() && d.getMonth() === n.getMonth() && d.getDate() === n.getDate();
+  }
+
+  async function resizeImage(file, maxDim, quality) {
+    maxDim = maxDim || 1280;
+    quality = quality || 0.8;
+    try {
+      var bitmap = await createImageBitmap(file);
+      var width = bitmap.width, height = bitmap.height;
+      if (width > maxDim || height > maxDim) {
+        if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+        else { width = Math.round(width * maxDim / height); height = maxDim; }
+      }
+      var canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      var ctx = canvas.getContext('2d');
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      return await new Promise(function (resolve) { canvas.toBlob(resolve, 'image/jpeg', quality); });
+    } catch (e) {
+      // Fallback path for browsers without createImageBitmap
+      return await new Promise(function (resolve, reject) {
+        var img = new Image();
+        var reader = new FileReader();
+        reader.onload = function () {
+          img.onload = function () {
+            var width = img.width, height = img.height;
+            if (width > maxDim || height > maxDim) {
+              if (width > height) { height = Math.round(height * maxDim / width); width = maxDim; }
+              else { width = Math.round(width * maxDim / height); height = maxDim; }
+            }
+            var canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            var ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            canvas.toBlob(function (b) { resolve(b); }, 'image/jpeg', quality);
+          };
+          img.onerror = reject;
+          img.src = reader.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+  }
+
+  // ---------- rendering ----------
+  function renderStats() {
+    $('statTotal').textContent = allLeads.length;
+    $('statPhotos').textContent = allLeads.filter(function (l) { return l.hasPhoto; }).length;
+    $('statToday').textContent = allLeads.filter(function (l) { return isToday(l.createdAt); }).length;
+    $('headerSub').textContent = allLeads.length + (allLeads.length === 1 ? ' saved · on this device' : ' saved · on this device');
+  }
+
+  function matchesFilter(l) {
+    if (activeType !== 'All' && l.type !== activeType) return false;
+    if (!searchTerm) return true;
+    var hay = [l.name, l.organization, l.role, l.phone, l.email, l.location, l.notes].join(' ').toLowerCase();
+    return hay.indexOf(searchTerm) !== -1;
+  }
+
+  function renderList() {
+    var listEl = $('leadList');
+    var emptyEl = $('emptyState');
+    var sorted = allLeads.slice().sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); });
+    var filtered = sorted.filter(matchesFilter);
+
+    revokeAllUrls();
+    listEl.innerHTML = '';
+
+    if (allLeads.length === 0) {
+      emptyEl.style.display = '';
+      listEl.style.display = 'none';
+    } else {
+      emptyEl.style.display = 'none';
+      listEl.style.display = '';
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="empty"><p>No leads match your search or filter.</p></div>';
+      }
+      filtered.forEach(function (l) {
+        var card = document.createElement('div');
+        card.className = 'lead-card';
+        card.dataset.id = l.id;
+
+        var thumbHtml;
+        if (l.photoBlob) {
+          var url = trackUrl(URL.createObjectURL(l.photoBlob));
+          thumbHtml = '<img class="thumb" src="' + url + '" alt="" />';
+        } else {
+          thumbHtml = '<div class="thumb">👤</div>';
+        }
+
+        var subParts = [l.organization, l.role].filter(Boolean).join(' · ');
+        var metaParts = [l.phone, l.location].filter(Boolean).join('  ·  ');
+
+        card.innerHTML =
+          thumbHtml +
+          '<div class="lead-info">' +
+            '<div class="lead-top">' +
+              '<span class="lead-name">' + escapeHtml(l.name || 'Unnamed') + '</span>' +
+              '<span class="badge ' + l.type + '">' + l.type + '</span>' +
+            '</div>' +
+            (subParts ? '<div class="lead-sub">' + escapeHtml(subParts) + '</div>' : '') +
+            (metaParts ? '<div class="lead-meta">' + escapeHtml(metaParts) + '</div>' : '') +
+          '</div>' +
+          '<div class="chevron">›</div>';
+
+        card.addEventListener('click', function () { openDetail(l.id); });
+        listEl.appendChild(card);
+      });
+    }
+    renderStats();
+  }
+
+  async function refresh() {
+    allLeads = await getAllLeads();
+    renderList();
+  }
+
+  // ---------- filter / search ----------
+  $('chipRow').addEventListener('click', function (e) {
+    var chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('.chip').forEach(function (c) { c.classList.remove('active'); });
+    chip.classList.add('active');
+    activeType = chip.dataset.type;
+    renderList();
+  });
+
+  var searchDebounce;
+  $('searchInput').addEventListener('input', function (e) {
+    clearTimeout(searchDebounce);
+    searchDebounce = setTimeout(function () {
+      searchTerm = e.target.value.trim().toLowerCase();
+      renderList();
+    }, 120);
+  });
+
+  // ---------- form sheet ----------
+  function openForm(lead) {
+    editingId = lead ? lead.id : null;
+    currentPhotoBlob = lead ? lead.photoBlob : null;
+    currentPhotoRemoved = false;
+
+    $('formTitle').textContent = lead ? 'Edit ' + lead.type : 'New Lead';
+    $('fName').value = lead ? lead.name || '' : '';
+    $('fOrg').value = lead ? lead.organization || '' : '';
+    $('fRole').value = lead ? lead.role || '' : '';
+    $('fPhone').value = lead ? lead.phone || '' : '';
+    $('fEmail').value = lead ? lead.email || '' : '';
+    $('fLocation').value = lead ? lead.location || '' : '';
+    $('fNotes').value = lead ? lead.notes || '' : '';
+
+    var type = lead ? lead.type : 'Lead';
+    document.querySelectorAll('#typeGrid .type-opt').forEach(function (o) {
+      o.classList.toggle('active', o.dataset.type === type);
+    });
+
+    updatePhotoPreview();
+    $('formOverlay').classList.add('open');
+  }
+
+  function closeForm() {
+    $('formOverlay').classList.remove('open');
+    currentPhotoBlob = null;
+    currentPhotoRemoved = false;
+    editingId = null;
+  }
+
+  function updatePhotoPreview() {
+    var preview = $('photoPreview');
+    if (currentPhotoBlob) {
+      var url = trackUrl(URL.createObjectURL(currentPhotoBlob));
+      preview.innerHTML = '<img src="' + url + '" alt="" />';
+      $('removePhotoBtn').style.display = '';
+    } else {
+      preview.innerHTML = '📷';
+      $('removePhotoBtn').style.display = 'none';
+    }
+  }
+
+  $('addFab').addEventListener('click', function () { openForm(null); });
+  $('formCancel').addEventListener('click', closeForm);
+
+  $('typeGrid').addEventListener('click', function (e) {
+    var opt = e.target.closest('.type-opt');
+    if (!opt) return;
+    document.querySelectorAll('#typeGrid .type-opt').forEach(function (o) { o.classList.remove('active'); });
+    opt.classList.add('active');
+  });
+
+  $('takePhotoBtn').addEventListener('click', function () { $('cameraInput').click(); });
+  $('pickPhotoBtn').addEventListener('click', function () { $('libraryInput').click(); });
+  $('removePhotoBtn').addEventListener('click', function () {
+    currentPhotoBlob = null;
+    currentPhotoRemoved = true;
+    updatePhotoPreview();
+  });
+
+  async function handlePhotoFile(input) {
+    var file = input.files && input.files[0];
+    input.value = '';
+    if (!file) return;
+    toast('Processing photo…', 900);
+    try {
+      var resized = await resizeImage(file, 1280, 0.8);
+      currentPhotoBlob = resized;
+      currentPhotoRemoved = false;
+      updatePhotoPreview();
+    } catch (err) {
+      toast('Could not process that photo');
+    }
+  }
+  $('cameraInput').addEventListener('change', function () { handlePhotoFile(this); });
+  $('libraryInput').addEventListener('change', function () { handlePhotoFile(this); });
+
+  $('useLocationBtn').addEventListener('click', function () {
+    if (!navigator.geolocation) { toast('Location not available on this device'); return; }
+    toast('Finding location…', 1500);
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var lat = pos.coords.latitude.toFixed(5);
+      var lon = pos.coords.longitude.toFixed(5);
+      var existing = $('fLocation').value.trim();
+      var coords = lat + ', ' + lon;
+      $('fLocation').value = existing ? existing + ' (' + coords + ')' : coords;
+      toast('Location added');
+    }, function () {
+      toast('Could not get location — check permissions');
+    }, { enableHighAccuracy: true, timeout: 10000 });
+  });
+
+  $('formSave').addEventListener('click', async function () {
+    var name = $('fName').value.trim();
+    if (!name) { toast('Please enter a name'); $('fName').focus(); return; }
+    var type = (document.querySelector('#typeGrid .type-opt.active') || {}).dataset ? document.querySelector('#typeGrid .type-opt.active').dataset.type : 'Lead';
+
+    var now = new Date().toISOString();
+    var lead = {
+      type: type,
+      name: name,
+      organization: $('fOrg').value.trim(),
+      role: $('fRole').value.trim(),
+      phone: $('fPhone').value.trim(),
+      email: $('fEmail').value.trim(),
+      location: $('fLocation').value.trim(),
+      notes: $('fNotes').value.trim(),
+      photoBlob: currentPhotoBlob || null,
+      hasPhoto: !!currentPhotoBlob,
+      updatedAt: now
+    };
+
+    try {
+      if (editingId) {
+        lead.id = editingId;
+        var existing = allLeads.find(function (l) { return l.id === editingId; });
+        lead.createdAt = existing ? existing.createdAt : now;
+        await putLead(lead);
+        toast('Saved changes');
+      } else {
+        lead.createdAt = now;
+        await addLead(lead);
+        toast('Lead saved');
+      }
+      closeForm();
+      await refresh();
+    } catch (err) {
+      toast('Could not save — storage may be full');
+    }
+  });
+
+  // ---------- detail sheet ----------
+  function openDetail(id) {
+    var l = allLeads.find(function (x) { return x.id === id; });
+    if (!l) return;
+    detailLeadId = id;
+    $('detailTitle').textContent = l.name || 'Lead';
+
+    var photoHtml = '';
+    if (l.photoBlob) {
+      var url = trackUrl(URL.createObjectURL(l.photoBlob));
+      photoHtml = '<img src="' + url + '" alt="" />';
+    }
+    $('photoDetail').innerHTML = photoHtml;
+
+    var rows = [
+      ['Type', l.type],
+      ['Organization', l.organization],
+      ['Role', l.role],
+      ['Phone', l.phone],
+      ['Email', l.email],
+      ['Location', l.location],
+      ['Notes', l.notes],
+      ['Captured', new Date(l.createdAt).toLocaleString()]
+    ];
+    var html = '';
+    rows.forEach(function (r) {
+      if (!r[1]) return;
+      html += '<div class="field"><label>' + r[0] + '</label><div style="font-size:15.5px;line-height:1.45;white-space:pre-wrap;">' + escapeHtml(r[1]) + '</div></div>';
+    });
+    $('detailFields').innerHTML = html;
+    $('detailOverlay').classList.add('open');
+  }
+  function closeDetail() { $('detailOverlay').classList.remove('open'); detailLeadId = null; }
+
+  $('detailClose').addEventListener('click', closeDetail);
+  $('detailEdit').addEventListener('click', function () {
+    var l = allLeads.find(function (x) { return x.id === detailLeadId; });
+    closeDetail();
+    if (l) openForm(l);
+  });
+  $('detailDelete').addEventListener('click', async function () {
+    if (!detailLeadId) return;
+    if (!confirm('Delete this lead? This cannot be undone.')) return;
+    await deleteLead(detailLeadId);
+    closeDetail();
+    await refresh();
+    toast('Lead deleted');
+  });
+
+  // close sheets on backdrop tap
+  [['formOverlay', closeForm], ['detailOverlay', closeDetail]].forEach(function (pair) {
+    $(pair[0]).addEventListener('click', function (e) { if (e.target === e.currentTarget) pair[1](); });
+  });
+
+  // ---------- export ----------
+  function photoFileName(l) {
+    var safe = (l.name || 'lead').replace(/[^a-z0-9]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'lead';
+    return l.id + '_' + safe + '.jpg';
+  }
+
+  function buildWorkbookArrayBuffer(leads) {
+    var rows = leads.map(function (l) {
+      return {
+        Date: l.createdAt ? new Date(l.createdAt).toLocaleString() : '',
+        Type: l.type || '',
+        Name: l.name || '',
+        Organization: l.organization || '',
+        Role: l.role || '',
+        Phone: l.phone || '',
+        Email: l.email || '',
+        Location: l.location || '',
+        Notes: l.notes || '',
+        Photo: l.photoBlob ? ('photos/' + photoFileName(l)) : ''
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(rows, {
+      header: ['Date', 'Type', 'Name', 'Organization', 'Role', 'Phone', 'Email', 'Location', 'Notes', 'Photo']
+    });
+    ws['!cols'] = [
+      { wch: 18 }, { wch: 10 }, { wch: 22 }, { wch: 22 }, { wch: 18 },
+      { wch: 16 }, { wch: 24 }, { wch: 20 }, { wch: 40 }, { wch: 26 }
+    ];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads');
+    return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  }
+
+  function downloadBlob(blob, filename) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 15000);
+  }
+
+  async function exportExcelOnly() {
+    if (!allLeads.length) { toast('No leads to export yet'); return; }
+    toast('Building Excel file…', 1200);
+    var buf = buildWorkbookArrayBuffer(allLeads);
+    var blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    downloadBlob(blob, 'Leads_' + dateStamp() + '.xlsx');
+    toast('Excel file downloaded');
+  }
+
+  async function exportWithPhotos() {
+    if (!allLeads.length) { toast('No leads to export yet'); return; }
+    toast('Building Excel + photos…', 2000);
+    try {
+      var buf = buildWorkbookArrayBuffer(allLeads);
+      var zip = new JSZip();
+      zip.file('Leads.xlsx', buf);
+      var photosFolder = zip.folder('photos');
+      allLeads.forEach(function (l) {
+        if (l.photoBlob) photosFolder.file(photoFileName(l), l.photoBlob);
+      });
+      var zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      downloadBlob(zipBlob, 'Leads_Export_' + dateStamp() + '.zip');
+      toast('Export downloaded');
+    } catch (err) {
+      toast('Export failed — try Excel only');
+    }
+  }
+
+  function openActionSheet(title, items) {
+    $('actionTitle').textContent = title;
+    var list = $('actionList');
+    list.innerHTML = '';
+    items.forEach(function (it) {
+      var btn = document.createElement('button');
+      btn.className = 'action-item' + (it.danger ? ' danger' : '');
+      btn.innerHTML = it.icon + ' ' + escapeHtml(it.label) + (it.desc ? '<span class="desc">' + escapeHtml(it.desc) + '</span>' : '');
+      btn.addEventListener('click', function () {
+        closeActionSheet();
+        it.action();
+      });
+      list.appendChild(btn);
+    });
+    $('actionOverlay').classList.add('open');
+  }
+  function closeActionSheet() { $('actionOverlay').classList.remove('open'); }
+  $('actionCancel').addEventListener('click', closeActionSheet);
+  $('actionOverlay').addEventListener('click', function (e) { if (e.target === e.currentTarget) closeActionSheet(); });
+
+  $('exportBtn').addEventListener('click', function () {
+    openActionSheet('Export', [
+      { icon: '🗜️', label: 'Excel + Photos (.zip)', desc: 'Complete backup with all photos included', action: exportWithPhotos },
+      { icon: '📊', label: 'Excel only (.xlsx)', desc: 'Just the spreadsheet, smaller file', action: exportExcelOnly }
+    ]);
+  });
+
+  $('menuBtn').addEventListener('click', function () {
+    openActionSheet('Menu', [
+      { icon: '🗑️', label: 'Delete all data', desc: 'Permanently erase every lead on this device', danger: true, action: async function () {
+          if (!confirm('Delete ALL leads from this device? This cannot be undone. Export first if you want a backup.')) return;
+          var ids = allLeads.map(function (l) { return l.id; });
+          for (var i = 0; i < ids.length; i++) { await deleteLead(ids[i]); }
+          await refresh();
+          toast('All data deleted');
+        } }
+    ]);
+  });
+
+  // ---------- offline indicator ----------
+  function updateOnlineState() {
+    $('offlinePill').classList.toggle('show', !navigator.onLine);
+  }
+  window.addEventListener('online', updateOnlineState);
+  window.addEventListener('offline', updateOnlineState);
+
+  // ---------- service worker (best-effort, ignored if unsupported/sandboxed) ----------
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('./sw.js').catch(function () {});
+    });
+  }
+
+  // ---------- init ----------
+  openDB().then(function (_db) {
+    db = _db;
+    updateOnlineState();
+    refresh();
+  }).catch(function () {
+    toast('Storage unavailable in this browser');
+  });
+})();
+</script>
+</body>
+</html>
