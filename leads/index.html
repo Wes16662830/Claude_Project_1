@@ -327,6 +327,23 @@
     text-align: center;
   }
   .offline-pill.show { display: block; }
+
+  .update-banner {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    transform: translateY(100%);
+    background: var(--green-dark); color: #fff;
+    padding: 12px 16px calc(12px + var(--safe-bottom));
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    z-index: 90; box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+    transition: transform .25s ease-out;
+    flex-wrap: wrap; text-align: center;
+  }
+  .update-banner.show { transform: translateY(0); }
+  .update-banner span { font-size: 13.5px; font-weight: 600; }
+  .update-banner button {
+    background: var(--gold); color: var(--green-dark); border: none;
+    padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 700; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -482,6 +499,11 @@
 </div>
 
 <div class="toast" id="toast"></div>
+
+<div class="update-banner" id="updateBanner">
+  <span>A new version is ready</span>
+  <button id="updateRefreshBtn">Refresh</button>
+</div>
 
 <div class="ocr-overlay" id="ocrOverlay">
   <div class="ocr-box">
@@ -1208,9 +1230,33 @@
   window.addEventListener('offline', updateOnlineState);
 
   // ---------- service worker (best-effort, ignored if unsupported/sandboxed) ----------
+  // Detects when a new version has taken over in the background and shows a
+  // banner rather than reloading silently, so in-progress form entries are
+  // never lost to an unannounced refresh.
   if ('serviceWorker' in navigator) {
+    $('updateRefreshBtn').addEventListener('click', function () {
+      window.location.reload();
+    });
+
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('./sw.js').catch(function () {});
+      navigator.serviceWorker.register('./sw.js').then(function (reg) {
+        // A genuine update: a new worker finishes installing while this page
+        // is ALREADY controlled by a previous one. (On a first-ever install
+        // there is no controller yet at this point, so this correctly stays
+        // quiet and doesn't show the banner.)
+        reg.addEventListener('updatefound', function () {
+          var installing = reg.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', function () {
+            if (installing.state === 'installed' && navigator.serviceWorker.controller) {
+              $('updateBanner').classList.add('show');
+            }
+          });
+        });
+        // Proactively check for a newer sw.js/cache each time the app opens,
+        // instead of waiting for the browser's own periodic check.
+        reg.update().catch(function () {});
+      }).catch(function () {});
     });
   }
 
