@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Masai Mara Field Checklist</title>
+<meta name="description" content="Offline wildlife &amp; bird checklist for the Masai Mara">
+<meta name="theme-color" content="#143d2b">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Mara Checklist">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-row">
+    <div class="brand">
+      <span class="brand-mark">🐾</span>
+      <div>
+        <h1>Masai Mara Field Checklist</h1>
+        <p class="tagline">Tick them off as you spot them &mdash; works with zero signal.</p>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button id="themeToggle" class="icon-btn" title="Toggle light/dark" aria-label="Toggle theme">🌓</button>
+      <button id="menuToggle" class="icon-btn" title="More" aria-label="More options">⋯</button>
+    </div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-ring" id="overallRing">
+        <svg viewBox="0 0 40 40"><circle class="ring-bg" cx="20" cy="20" r="17"></circle><circle class="ring-fg" id="overallRingFg" cx="20" cy="20" r="17"></circle></svg>
+        <span id="overallCount">0/0</span>
+      </div>
+      <div class="stat-label">Spotted overall</div>
+    </div>
+    <div class="stat-card big5-card">
+      <div class="big5-dots" id="big5Dots"></div>
+      <div class="stat-label">The Big Five</div>
+    </div>
+    <button class="stat-card suggest-card" id="suggestBtn">
+      <span class="suggest-icon">🎲</span>
+      <div class="stat-label">What might I see next?</div>
+    </button>
+  </div>
+</header>
+
+<nav class="filterbar">
+  <div class="chip-row" id="categoryChips">
+    <button class="chip active" data-cat="all">All</button>
+    <button class="chip" data-cat="big5">Big Five</button>
+    <button class="chip" data-cat="predator">Predators</button>
+    <button class="chip" data-cat="herbivore">Herbivores</button>
+    <button class="chip" data-cat="primate">Primates</button>
+    <button class="chip" data-cat="reptile">Reptiles</button>
+    <button class="chip" data-cat="bird">Birds</button>
+  </div>
+  <div class="search-row">
+    <input type="search" id="searchInput" placeholder="Search species…" aria-label="Search species">
+    <select id="sortSelect" aria-label="Sort by">
+      <option value="name">Sort: A&ndash;Z</option>
+      <option value="rarity">Sort: Rarity</option>
+      <option value="category">Sort: Category</option>
+    </select>
+    <label class="unseen-toggle">
+      <input type="checkbox" id="unseenOnly"> Unseen only
+    </label>
+  </div>
+</nav>
+
+<main id="grid" class="grid"></main>
+
+<p class="empty-state" id="emptyState" hidden>No species match your search.</p>
+
+<!-- Detail / sighting modal -->
+<dialog id="detailModal" class="modal">
+  <form method="dialog" class="modal-form">
+    <button type="submit" class="modal-close" aria-label="Close">✕</button>
+    <div id="modalIcon" class="modal-icon"></div>
+    <div class="modal-body">
+      <span class="modal-badges">
+        <span id="modalRarity" class="badge"></span>
+        <span id="modalBig5" class="badge badge-gold" hidden>Big Five</span>
+      </span>
+      <h2 id="modalName"></h2>
+      <p class="sci-name" id="modalSci"></p>
+      <p class="habitat" id="modalHabitat"></p>
+      <p class="fact" id="modalFact"></p>
+
+      <div class="sighting-panel">
+        <label class="seen-toggle">
+          <input type="checkbox" id="modalSeenCheck">
+          <span id="modalSeenLabel">Mark as spotted</span>
+        </label>
+        <div id="sightingDetails" class="sighting-details" hidden>
+          <label>When
+            <input type="datetime-local" id="sightingWhen">
+          </label>
+          <label>Note
+            <input type="text" id="sightingNote" placeholder="e.g. near the river crossing, with cubs">
+          </label>
+          <div class="sighting-buttons">
+            <button type="button" id="tagLocationBtn" class="ghost-btn">📍 Tag GPS location</button>
+            <label class="ghost-btn file-btn">📷 Attach my photo
+              <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+            </label>
+          </div>
+          <span id="sightingMeta" class="sighting-meta"></span>
+          <img id="sightingPhoto" class="sighting-photo" hidden alt="Your sighting photo">
+          <button type="button" id="removePhotoBtn" class="ghost-btn" hidden>Remove photo</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- Overflow menu -->
+<dialog id="menuModal" class="modal menu-modal">
+  <form method="dialog" class="modal-form">
+    <button type="submit" class="modal-close" aria-label="Close">✕</button>
+    <h2>More</h2>
+    <button type="button" class="menu-item" id="shareBtn">📤 Share my sightings summary</button>
+    <button type="button" class="menu-item" id="exportBtn">⬇️ Export checklist (backup)</button>
+    <label class="menu-item file-btn">⬆️ Import checklist
+      <input type="file" id="importInput" accept="application/json" hidden>
+    </label>
+    <button type="button" class="menu-item danger" id="resetBtn">♻️ Reset all ticks</button>
+    <div class="install-note" id="installNote">
+      <p><strong>Install this app</strong> so it sits on your home screen and opens instantly with no browser bar.</p>
+      <button type="button" id="installBtn" class="ghost-btn" hidden>Install app</button>
+      <p class="install-ios" id="iosInstallHint" hidden>On iPhone/iPad: tap the Share icon <span aria-hidden="true">⬆️</span> in Safari, then "Add to Home Screen".</p>
+    </div>
+    <p class="offline-note">Everything here — including every picture and fact — is stored on your device. Once you've loaded this page once, it works with airplane mode on.</p>
+  </form>
+</dialog>
+
+<div id="toast" class="toast" hidden></div>
+<canvas id="confettiCanvas" class="confetti-canvas" hidden></canvas>
+
+<script src="data.js"></script>
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+{
+  "name": "Masai Mara Field Checklist",
+  "short_name": "Mara Checklist",
+  "description": "Offline wildlife and bird checklist for the Masai Mara, with pictures and facts for every species.",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#143d2b",
+  "theme_color": "#143d2b",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
