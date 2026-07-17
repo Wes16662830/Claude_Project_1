@@ -27,10 +27,11 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Add Leads (separate static app, not part of the Hyrox build)
+      - name: Add separate static apps (not part of the Hyrox build)
         run: |
           cp -r leads dist/leads
           cp -r kenya-leads dist/kenya-leads
+          cp -r masai-mara-checklist dist/masai-mara-checklist
       - uses: actions/configure-pages@v4
       - uses: actions/upload-pages-artifact@v3
         with:
