@@ -1,23 +1,24 @@
-name: Deploy to GitHub Pages
+name: Deploy Hyrox to GitHub Pages
+
+# Deploys ONLY the Hyrox app, from its own branch, into its own subfolder
+# (/hyrox/) of the gh-pages branch. Using keep_files means it never deletes
+# other apps' folders — so projects sharing this repo stop clobbering each
+# other. Each app should use the same pattern with its own branch + dir.
 
 on:
   push:
-    branches: [main]
+    branches: [claude/hyrox-doubles-trainer-3a1e2b]
+  workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
-  group: pages
+  group: pages-hyrox
   cancel-in-progress: true
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,9 +28,9 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - uses: actions/configure-pages@v4
-      - uses: actions/upload-pages-artifact@v3
+      - uses: peaceiris/actions-gh-pages@v3
         with:
-          path: dist
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          destination_dir: hyrox
+          keep_files: true

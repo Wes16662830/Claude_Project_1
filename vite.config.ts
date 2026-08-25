@@ -16,8 +16,8 @@ export default defineConfig({
         background_color: '#0a0a0a',
         display: 'standalone',
         orientation: 'portrait',
-        scope: '/Claude_Project_1/',
-        start_url: '/Claude_Project_1/',
+        scope: '/Claude_Project_1/hyrox/',
+        start_url: '/Claude_Project_1/hyrox/',
         icons: [
           {
             src: 'icon-192.png',
@@ -51,5 +51,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: '/Claude_Project_1/',
+  base: '/Claude_Project_1/hyrox/',
 })
