@@ -322,6 +322,8 @@ export interface Profile {
   raceDate: string             // YYYY-MM-DD — the actual race day
   planStartDate: string        // YYYY-MM-DD — the Monday of Week 1 (auto-derived or manual)
   restDays: number[]           // day indexes (0=Mon … 6=Sun) the user wants as rest, e.g. [2,4]
+  workoutMode: 'hyrox' | 'strength'   // global default workout style
+  dayModeOverrides: Record<string, 'hyrox' | 'strength'>  // per-session overrides keyed by sessionId
   customLoads: StationLoads | null  // null = use division defaults
 }
 
@@ -341,6 +343,8 @@ export const DEFAULT_PROFILE: Profile = {
   raceDate: '',
   planStartDate: '',
   restDays: [2, 4],   // Wednesday and Friday
+  workoutMode: 'hyrox',
+  dayModeOverrides: {},
   customLoads: null,
 }
 
@@ -372,6 +376,18 @@ export function weeksUntilRace(raceDate: string): number | null {
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const diff = Math.ceil((race.getTime() - today.getTime()) / 86400000)
   return diff < 0 ? null : Math.floor(diff / 7)
+}
+
+// ---------------------------------------------------------------------------
+// Workout mode
+// ---------------------------------------------------------------------------
+
+/** Effective workout style for a session: per-day override wins, else the global default. */
+export function resolveWorkoutMode(
+  profile: { workoutMode?: 'hyrox' | 'strength'; dayModeOverrides?: Record<string, 'hyrox' | 'strength'> },
+  sessionId: string,
+): 'hyrox' | 'strength' {
+  return profile.dayModeOverrides?.[sessionId] ?? profile.workoutMode ?? 'hyrox'
 }
 
 // ---------------------------------------------------------------------------

@@ -154,6 +154,38 @@ export default function Settings({ profile, setProfile }: Props) {
         </div>
       </div>
 
+      {/* Workout mode */}
+      <div style={card}>
+        <div style={sectionTitle}>Workout Mode</div>
+        <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
+          Choose your default training style. Switch any single day on the Today tab without changing this default.
+        </div>
+        <div style={{ display: 'flex', gap: 8 }}>
+          {([
+            { id: 'hyrox',    emoji: '🏃', label: 'Hyrox Hybrid', desc: 'The 11-week race plan — runs, stations, compromised bricks and sims.' },
+            { id: 'strength', emoji: '🏋️', label: 'Strength (PPL)', desc: 'Full gym sessions on a Push / Pull / Legs split. Pure lifting, no Hyrox stations.' },
+          ] as const).map(({ id, emoji, label, desc }) => {
+            const sel = (profile.workoutMode ?? 'hyrox') === id
+            return (
+              <button key={id} onClick={() => update({ workoutMode: id })} style={{
+                flex: 1, padding: '12px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                border: `1px solid ${sel ? '#e8962a' : '#2a2a2a'}`,
+                background: sel ? '#e8962a18' : '#0a0a0a',
+                color: sel ? '#e8962a' : '#888', fontWeight: sel ? 600 : 400,
+                textAlign: 'left', transition: 'all 0.12s',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                  <span style={{ fontSize: 15 }}>{emoji}</span>
+                  <span>{label}</span>
+                  {sel && <span style={{ marginLeft: 'auto', fontSize: 9, fontWeight: 800, letterSpacing: '0.6px' }}>ACTIVE</span>}
+                </div>
+                <div style={{ fontSize: 11, color: sel ? '#e8962a99' : '#555', lineHeight: 1.4 }}>{desc}</div>
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
       {/* Races & targets */}
       <div style={card}>
         <div style={sectionTitle}>Races & Targets</div>

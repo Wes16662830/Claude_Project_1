@@ -9,6 +9,7 @@ import {
   mapCalendarDayToPlanDay, PLAN_REST_DAYS,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
+import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
 import { fmtTime } from '../data/raceData'
 
 const ALL_STATIONS: StationId[] = [
@@ -95,6 +96,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
   const fitness = getFitnessLevel(profile.fitnessLevel)
   const isSolo = division.athletes === 1
   const trainingAlone = profile.trainingMode === 'solo'
+  const strengthMode = (profile.workoutMode ?? 'hyrox') === 'strength'
 
   const runSegment = profile.segments.find(s => s.id === 'running')
   const targetPace = runSegment?.targetSeconds ?? 272
@@ -151,6 +153,15 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
 
   return (
     <div style={{ padding: '24px', maxWidth: 960, margin: '0 auto' }}>
+
+      {strengthMode && (
+        <div style={{ background: '#e8962a15', border: '1px solid #e8962a55', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>🏋️</span>
+          <div style={{ fontSize: 13, color: '#e8962a', lineHeight: 1.5 }}>
+            <b>Strength (PPL) mode</b> — workout days show Push / Pull / Legs gym sessions instead of Hyrox work. Rest days and race day are unchanged. Switch back in Settings → Workout Mode.
+          </div>
+        </div>
+      )}
 
       {/* Training load progression curve */}
       <div style={{ background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '18px 20px', marginBottom: 16 }}>
@@ -368,7 +379,14 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                   const planIdx = mapCalendarDayToPlanDay(calDay, profile.restDays ?? PLAN_REST_DAYS)
                   const d = week.days[planIdx] ?? week.days[PLAN_REST_DAYS[0]]
                   const dayIdx = planIdx  // keep original plan index for IDs/motivations
-                  const s = d.session
+                  const planS = d.session
+                  const planIsRest = planS.type === 'rest'
+                  const planIsRace = (planS.type as string) === 'race'
+                  // Global strength mode swaps workout days (never rest/race) for PPL gym sessions
+                  const useStrength = strengthMode && !planIsRest && !planIsRace
+                  const s = useStrength
+                    ? getStrengthSession(week.week, planWorkoutSlot(planIdx), profile.fitnessLevel)
+                    : planS
                   const rawType = s.type as string
                   const type: SessionType = rawType === 'race' ? 'sim' : s.type
                   const isRace = rawType === 'race'
@@ -378,7 +396,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                     .filter(r => r.status !== 'native')
 
                   const isRunSession = s.type === 'run'
-                  const showScaling = !isRest && fitness.id !== 'advanced'
+                  const showScaling = !isRest && !useStrength && fitness.id !== 'advanced'
                   const showZones = isRunSession && !isRest
                   const zoneInfo = isRunSession ? sessionPaceInfo(s) : null
                   const hasStationLoads = !isRunSession && (s.stations ?? []).some(
@@ -537,14 +555,14 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                         return (
                           <div style={
                             isRace
-                              ? { fontSize: 11, color: '#e8962a', background: '#e8962a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
-                              : { fontSize: 11, color: SESSION_COLORS[type].text, background: SESSION_COLORS[type].border + '11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5 }
+                              ? { fontSize: 11, color: '#e8962a', background: '#e8962a11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5, whiteSpace: 'pre-line' }
+                              : { fontSize: 11, color: SESSION_COLORS[type].text, background: SESSION_COLORS[type].border + '11', borderRadius: 4, padding: '6px 8px', lineHeight: 1.5, whiteSpace: 'pre-line' }
                           }>{notesText}</div>
                         )
                       })()}
 
                       {/* Session motivation */}
-                      {SESSION_MOTIVATION[sessionId] && (
+                      {!useStrength && SESSION_MOTIVATION[sessionId] && (
                         <div style={{
                           marginTop: 8, fontSize: 11, color: '#e8c12a',
                           fontStyle: 'italic', lineHeight: 1.5,

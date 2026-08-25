@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
-import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay } from '../data/profile'
+import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay, resolveWorkoutMode } from '../data/profile'
+import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
 
@@ -101,6 +102,7 @@ interface Props {
   profile: Profile
   completed: Set<string>
   onToggleComplete: (id: string) => void
+  onSetDayMode: (sessionId: string, mode: 'hyrox' | 'strength' | null) => void
 }
 
 // ─── Timer hook ───────────────────────────────────────────────────────────────
@@ -368,7 +370,7 @@ function TimerDisplay({ mode, accentColor }: TDisplayProps) {
 
 // ─── Main Today Component ────────────────────────────────────────────────────
 
-export default function Today({ profile, completed, onToggleComplete }: Props) {
+export default function Today({ profile, completed, onToggleComplete, onSetDayMode }: Props) {
   const pos = getPlanPos(profile.planStartDate, profile.restDays ?? [2, 4])
 
   // No start date set
@@ -448,18 +450,29 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
   const day = week.days[pos.planDayIndex]
   if (!day) return null
 
-  const session = day.session
+  const planSession = day.session
+  const planIsRest = planSession.type === 'rest'
+  const planIsRace = (planSession.type as string) === 'race'
+  const sessionId = `w${pos.weekNum}_d${pos.planDayIndex}`
+
+  // Strength override: swap the Hyrox session for a PPL gym day (never on rest/race days)
+  const mode = resolveWorkoutMode(profile, sessionId)
+  const useStrength = mode === 'strength' && !planIsRest && !planIsRace
+  const session = useStrength
+    ? getStrengthSession(pos.weekNum, planWorkoutSlot(pos.planDayIndex), profile.fitnessLevel)
+    : planSession
+
   const rawType = session.type as string
   const type: SessionType = rawType === 'race' ? 'sim' : session.type
   const isRest = session.type === 'rest'
   const isRace = rawType === 'race'
   const colors = SESSION_COLORS[type]
-  const sessionId = `w${pos.weekNum}_d${pos.planDayIndex}`
   const isDone = completed.has(sessionId)
-  const motivation = SESSION_MOTIVATION[sessionId] ?? ''
+  const motivation = useStrength ? '' : (SESSION_MOTIVATION[sessionId] ?? '')
   const isSolo = profile.trainingMode === 'solo'
-  const notesText = isSolo && session.soloNotes ? session.soloNotes : session.notes
+  const notesText = !useStrength && isSolo && session.soloNotes ? session.soloNotes : session.notes
   const timerMode = detectTimer(session.format, session.title, session.type)
+  const canSwitchMode = !planIsRest && !planIsRace
 
   const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const PHASE_LABEL: Record<string, string> = { aerobic: 'BASE', build: 'BUILD', peak: 'PEAK', race: 'RACE' }
@@ -510,6 +523,33 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
               </div>
             </div>
 
+            {/* Hyrox / Strength day toggle */}
+            {canSwitchMode && (
+              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+                {([
+                  { id: 'hyrox',    label: '🏃 Hyrox' },
+                  { id: 'strength', label: '🏋️ Strength' },
+                ] as const).map(({ id, label }) => {
+                  const sel = mode === id
+                  const globalDefault = profile.workoutMode ?? 'hyrox'
+                  return (
+                    <button
+                      key={id}
+                      onClick={() => onSetDayMode(sessionId, id === globalDefault ? null : id)}
+                      style={{
+                        flex: 1, padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: sel ? 700 : 500,
+                        cursor: 'pointer', border: `1px solid ${sel ? '#e8962a' : '#2a2a2a'}`,
+                        background: sel ? '#e8962a22' : '#0a0a0a',
+                        color: sel ? '#e8962a' : '#888', transition: 'all 0.12s',
+                      }}
+                    >
+                      {label}{sel ? '  ✓' : ''}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+
             {/* Workout — dominant */}
             {session.format && (
               <div style={{ fontSize: 12, fontWeight: 800, color: '#e8c12a', letterSpacing: '0.5px', marginBottom: 6 }}>{session.format}</div>
@@ -531,7 +571,7 @@ export default function Today({ profile, completed, onToggleComplete }: Props) {
                 <div style={{ fontSize: 14, color: '#bbb', lineHeight: 1.8, marginBottom: notesText ? 12 : 0, whiteSpace: 'pre-line' }}>{session.detail}</div>
               )}
               {notesText && (
-                <div style={{ fontSize: 13, color: colors.text, background: colors.border + '15', borderRadius: 8, padding: '10px 12px', lineHeight: 1.7, borderLeft: `3px solid ${colors.border}` }}>{notesText}</div>
+                <div style={{ fontSize: 13, color: colors.text, background: colors.border + '15', borderRadius: 8, padding: '10px 12px', lineHeight: 1.7, borderLeft: `3px solid ${colors.border}`, whiteSpace: 'pre-line' }}>{notesText}</div>
               )}
             </div>
           )}

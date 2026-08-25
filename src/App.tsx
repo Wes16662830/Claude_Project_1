@@ -53,6 +53,13 @@ export default function App() {
     setCompleted(next)
   }
 
+  const setDayMode = (sessionId: string, mode: 'hyrox' | 'strength' | null) => {
+    const next = { ...(profile.dayModeOverrides ?? {}) }
+    if (mode === null) delete next[sessionId]
+    else next[sessionId] = mode
+    setProfile({ ...profile, dayModeOverrides: next })
+  }
+
   // Parse ?partner= URL param on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -71,7 +78,7 @@ export default function App() {
       <UpdateBanner />
       <Header activeTab={tab} onTabChange={setTab} profile={profile} partner={partner} />
       <main>
-        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
+        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} />}
         {tab === 'dashboard' && <Dashboard profile={profile} />}
         {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}
