@@ -103,6 +103,35 @@ interface Props {
   completed: Set<string>
   onToggleComplete: (id: string) => void
   onSetDayMode: (sessionId: string, mode: 'hyrox' | 'strength' | null) => void
+  onSetWorkoutMode: (mode: 'hyrox' | 'strength') => void
+}
+
+// Always-visible training-style switcher for the top of the Today page.
+function ModeSwitch({ mode, onChange }: { mode: 'hyrox' | 'strength'; onChange: (m: 'hyrox' | 'strength') => void }) {
+  return (
+    <div style={{ display: 'flex', gap: 6, background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: 6 }}>
+      {([
+        { id: 'hyrox',    label: '🏃 Hyrox Hybrid' },
+        { id: 'strength', label: '🏋️ Strength' },
+      ] as const).map(({ id, label }) => {
+        const sel = mode === id
+        return (
+          <button
+            key={id}
+            onClick={() => onChange(id)}
+            style={{
+              flex: 1, padding: '10px 12px', borderRadius: 8, fontSize: 13, fontWeight: sel ? 700 : 500,
+              cursor: 'pointer', border: 'none',
+              background: sel ? '#e8962a' : 'transparent',
+              color: sel ? '#000' : '#888', transition: 'all 0.12s',
+            }}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 // ─── Timer hook ───────────────────────────────────────────────────────────────
@@ -370,7 +399,8 @@ function TimerDisplay({ mode, accentColor }: TDisplayProps) {
 
 // ─── Main Today Component ────────────────────────────────────────────────────
 
-export default function Today({ profile, completed, onToggleComplete, onSetDayMode }: Props) {
+export default function Today({ profile, completed, onToggleComplete, onSetDayMode, onSetWorkoutMode }: Props) {
+  const globalMode = profile.workoutMode ?? 'hyrox'
   const pos = getPlanPos(profile.planStartDate, profile.restDays ?? [2, 4])
 
   // No start date set
@@ -378,6 +408,9 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
     const weeksLeft = profile.raceDate ? weeksUntilRace(profile.raceDate) : null
     return (
       <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
+          <ModeSwitch mode={globalMode} onChange={onSetWorkoutMode} />
+        </div>
         <div style={{ fontSize: 48, marginBottom: 16 }}>📅</div>
         <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>Set your race date</div>
         <div style={{ fontSize: 14, color: '#666', lineHeight: 1.7, marginBottom: 24 }}>
@@ -425,6 +458,9 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
 
     return (
       <div style={{ padding: 24, maxWidth: 600, margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ maxWidth: 420, margin: '0 auto 24px' }}>
+          <ModeSwitch mode={globalMode} onChange={onSetWorkoutMode} />
+        </div>
         <div style={{ fontSize: 48, marginBottom: 16 }}>{isBefore ? '⏳' : '🏁'}</div>
         <div style={{ fontSize: 20, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>
           {isBefore
@@ -472,13 +508,15 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
   const isSolo = profile.trainingMode === 'solo'
   const notesText = !useStrength && isSolo && session.soloNotes ? session.soloNotes : session.notes
   const timerMode = detectTimer(session.format, session.title, session.type)
-  const canSwitchMode = !planIsRest && !planIsRace
 
   const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
   const PHASE_LABEL: Record<string, string> = { aerobic: 'BASE', build: 'BUILD', peak: 'PEAK', race: 'RACE' }
 
   return (
     <div style={{ padding: '16px', maxWidth: 700, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Quick training-style switch — always visible */}
+      <ModeSwitch mode={mode} onChange={m => { onSetWorkoutMode(m); onSetDayMode(sessionId, null) }} />
 
       {/* Rest day */}
       {isRest ? (
@@ -522,33 +560,6 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
                 )}
               </div>
             </div>
-
-            {/* Hyrox / Strength day toggle */}
-            {canSwitchMode && (
-              <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-                {([
-                  { id: 'hyrox',    label: '🏃 Hyrox' },
-                  { id: 'strength', label: '🏋️ Strength' },
-                ] as const).map(({ id, label }) => {
-                  const sel = mode === id
-                  const globalDefault = profile.workoutMode ?? 'hyrox'
-                  return (
-                    <button
-                      key={id}
-                      onClick={() => onSetDayMode(sessionId, id === globalDefault ? null : id)}
-                      style={{
-                        flex: 1, padding: '8px 12px', borderRadius: 8, fontSize: 12, fontWeight: sel ? 700 : 500,
-                        cursor: 'pointer', border: `1px solid ${sel ? '#e8962a' : '#2a2a2a'}`,
-                        background: sel ? '#e8962a22' : '#0a0a0a',
-                        color: sel ? '#e8962a' : '#888', transition: 'all 0.12s',
-                      }}
-                    >
-                      {label}{sel ? '  ✓' : ''}
-                    </button>
-                  )
-                })}
-              </div>
-            )}
 
             {/* Workout — dominant */}
             {session.format && (

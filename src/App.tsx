@@ -60,6 +60,10 @@ export default function App() {
     setProfile({ ...profile, dayModeOverrides: next })
   }
 
+  const setWorkoutMode = (mode: 'hyrox' | 'strength') => {
+    setProfile({ ...profile, workoutMode: mode })
+  }
+
   // Parse ?partner= URL param on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -78,7 +82,7 @@ export default function App() {
       <UpdateBanner />
       <Header activeTab={tab} onTabChange={setTab} profile={profile} partner={partner} />
       <main>
-        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} />}
+        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} onSetWorkoutMode={setWorkoutMode} />}
         {tab === 'dashboard' && <Dashboard profile={profile} />}
         {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}
