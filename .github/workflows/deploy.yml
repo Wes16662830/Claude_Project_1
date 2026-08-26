@@ -28,9 +28,14 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - name: Assemble site (app in /hyrox, root redirect + old-SW cleanup)
+        run: |
+          mkdir -p site/hyrox
+          cp -r dist/. site/hyrox/
+          cp deploy-root/index.html site/index.html
+          cp deploy-root/sw.js site/sw.js
       - uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
-          destination_dir: hyrox
+          publish_dir: ./site
           keep_files: true
