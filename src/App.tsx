@@ -54,14 +54,22 @@ export default function App() {
   }
 
   const setDayMode = (sessionId: string, mode: 'hyrox' | 'strength' | null) => {
-    const next = { ...(profile.dayModeOverrides ?? {}) }
-    if (mode === null) delete next[sessionId]
-    else next[sessionId] = mode
-    setProfile({ ...profile, dayModeOverrides: next })
+    setProfileState(prev => {
+      const next = { ...(prev.dayModeOverrides ?? {}) }
+      if (mode === null) delete next[sessionId]
+      else next[sessionId] = mode
+      const p = { ...prev, dayModeOverrides: next }
+      saveProfile(p)
+      return p
+    })
   }
 
   const setWorkoutMode = (mode: 'hyrox' | 'strength') => {
-    setProfile({ ...profile, workoutMode: mode })
+    setProfileState(prev => {
+      const p = { ...prev, workoutMode: mode }
+      saveProfile(p)
+      return p
+    })
   }
 
   // Parse ?partner= URL param on first load
