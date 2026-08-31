@@ -162,7 +162,7 @@ export default function Settings({ profile, setProfile }: Props) {
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           {([
-            { id: 'hyrox',    emoji: '🏃', label: 'Hyrox Hybrid', desc: 'The 11-week race plan — runs, stations, compromised bricks and sims.' },
+            { id: 'hyrox',    emoji: '🏃', label: 'Hyrox Hybrid', desc: 'The 12-week race plan — runs, stations, compromised bricks and sims.' },
             { id: 'strength', emoji: '🏋️', label: 'Strength (PPL)', desc: 'Full gym sessions on a Push / Pull / Legs split. Pure lifting, no Hyrox stations.' },
           ] as const).map(({ id, emoji, label, desc }) => {
             const sel = (profile.workoutMode ?? 'hyrox') === id
@@ -223,15 +223,15 @@ export default function Settings({ profile, setProfile }: Props) {
               {profile.raceDate && (() => {
                 const weeks = weeksUntilRace(profile.raceDate)
                 if (weeks === null) return <span style={{ fontSize: 12, color: '#d63b2f', fontWeight: 600 }}>Race day passed</span>
-                const entryWeek = Math.max(1, 12 - weeks)
+                const entryWeek = Math.max(1, 13 - weeks)
                 return (
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 12, color: weeks <= 2 ? '#d63b2f' : weeks <= 5 ? '#e8962a' : '#2a8c5a', fontWeight: 700 }}>
                       {weeks === 0 ? 'Race week!' : `${weeks} week${weeks !== 1 ? 's' : ''} to race`}
                     </span>
-                    {weeks < 11 && (
+                    {weeks < 12 && (
                       <span style={{ fontSize: 11, color: '#666' }}>
-                        → entering at Week {entryWeek} of 11
+                        → entering at Week {entryWeek} of 12
                       </span>
                     )}
                   </div>
@@ -239,8 +239,8 @@ export default function Settings({ profile, setProfile }: Props) {
               })()}
             </div>
             <div style={{ fontSize: 11, color: '#555', marginTop: 6, lineHeight: 1.5 }}>
-              Set your race date and the plan start (Week 1 Monday) is calculated automatically — 11 weeks out.
-              If you have fewer than 11 weeks, you'll jump in at the right point in the plan.
+              Set your race date and the plan start (Week 1 Monday) is calculated automatically — 12 weeks out.
+              If you have fewer than 12 weeks, you'll jump in at the right point in the plan.
             </div>
           </div>
 

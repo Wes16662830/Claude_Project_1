@@ -87,7 +87,7 @@ function getPlanPos(
   const start = new Date(y, mo - 1, d)
   const today = new Date(); today.setHours(0, 0, 0, 0)
   const diff = Math.floor((today.getTime() - start.getTime()) / 86400000)
-  if (diff < 0 || diff >= 77) return null
+  if (diff < 0 || diff >= 84) return null
   const calendarDay = diff % 7
   return {
     weekNum: Math.floor(diff / 7) + 1,
@@ -415,17 +415,17 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
         <div style={{ fontSize: 22, fontWeight: 700, color: '#f0ede8', marginBottom: 8 }}>Set your race date</div>
         <div style={{ fontSize: 14, color: '#666', lineHeight: 1.7, marginBottom: 24 }}>
           Go to <b style={{ color: '#e8962a' }}>Settings → Races &amp; Targets → Race Date</b> and pick your event date.
-          The plan start date is calculated automatically — 11 weeks out. If you have fewer weeks, you jump in at the right point.
+          The plan start date is calculated automatically — 12 weeks out. If you have fewer weeks, you jump in at the right point.
         </div>
         {weeksLeft !== null && (
           <div style={{ fontSize: 12, color: '#444', background: '#111', borderRadius: 8, padding: '12px 16px', textAlign: 'left', lineHeight: 1.7 }}>
             {weeksLeft} week{weeksLeft !== 1 ? 's' : ''} until race day.
-            {weeksLeft < 11 ? ` You'll enter at Week ${Math.max(1, 12 - weeksLeft)} of the plan.` : ' Full 11-week plan available.'}
+            {weeksLeft < 12 ? ` You'll enter at Week ${Math.max(1, 13 - weeksLeft)} of the plan.` : ' Full 12-week plan available.'}
           </div>
         )}
         {!profile.raceDate && (
           <div style={{ fontSize: 12, color: '#444', background: '#111', borderRadius: 8, padding: '12px 16px', textAlign: 'left', lineHeight: 1.7 }}>
-            Tip: The plan is 11 weeks. Set your race date in Settings and everything will auto-configure.
+            Tip: The plan is 12 weeks. Set your race date in Settings and everything will auto-configure.
           </div>
         )}
       </div>
@@ -447,7 +447,7 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
           <div style={{ fontSize: 64, marginBottom: 16 }}>🏆</div>
           <div style={{ fontSize: 24, fontWeight: 800, color: '#e8962a', marginBottom: 8 }}>Race week!</div>
           <div style={{ fontSize: 14, color: '#aaa', lineHeight: 1.7, marginBottom: 8 }}>
-            11 weeks of work done. Time to race. Trust the training, attack every station, run your own race.
+            12 weeks of work done. Time to race. Trust the training, attack every station, run your own race.
           </div>
           <div style={{ fontSize: 13, color: '#666', fontStyle: 'italic' }}>
             {profile.nextRaceName || 'Race day'} target: {Math.floor(profile.targetFinishSeconds / 60)}:{String(profile.targetFinishSeconds % 60).padStart(2, '0')}
@@ -470,7 +470,7 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
         <div style={{ fontSize: 14, color: '#666', lineHeight: 1.6, marginBottom: 12 }}>
           {isBefore
             ? 'Get your kit ready. Rest, eat well, and show up on Day 1.'
-            : 'The 11 weeks are done. How did the race go? Update your result in Settings → Segment Splits.'}
+            : 'The 12 weeks are done. How did the race go? Update your result in Settings → Segment Splits.'}
         </div>
         {weeksLeft !== null && !isBefore && (
           <div style={{ fontSize: 13, color: '#e8962a', fontWeight: 600 }}>

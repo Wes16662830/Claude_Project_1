@@ -85,7 +85,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
     const start = new Date(y, m - 1, d)
     const today = new Date(); today.setHours(0, 0, 0, 0)
     const diff = Math.floor((today.getTime() - start.getTime()) / 86400000)
-    if (diff < 0 || diff >= 77) return null
+    if (diff < 0 || diff >= 84) return null
     return Math.floor(diff / 7) + 1
   })()
 
@@ -175,7 +175,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
           </div>
         </div>
         <div style={{ fontSize: 12, color: '#555', marginBottom: 14 }}>
-          Plan intensity ramp. Peaks at Week 7 (GRIND), full simulation at Week 9, taper through to race day.
+          Plan intensity ramp. Peaks at Week 8 (GRIND), full simulation at Week 10, taper through to race day.
         </div>
         <div style={{ display: 'flex', gap: 4, alignItems: 'flex-end', height: 60 }}>
           {TRAINING_PLAN.map(week => {
@@ -338,7 +338,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
         const isCurrent = currentWeekNum === week.week
         const isPast = currentWeekNum !== null && week.week < currentWeekNum
         const weeksLeft = profile.raceDate ? weeksUntilRace(profile.raceDate) : null
-        const isRaceWeek = weeksLeft === 0 && week.week === 11
+        const isRaceWeek = weeksLeft === 0 && week.week === 12
 
         return (
           <div id={`week-${week.week}`} key={week.week} style={{ background: '#111', border: `1px solid ${isCurrent ? '#e8962a55' : '#1e1e1e'}`, borderRadius: 12, marginBottom: 12, overflow: 'hidden', opacity: isPast ? 0.55 : 1, transition: 'opacity 0.2s' }}>

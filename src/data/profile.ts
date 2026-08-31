@@ -352,13 +352,13 @@ export const DEFAULT_PROFILE: Profile = {
 // Race date helpers
 // ---------------------------------------------------------------------------
 
-/** Given a race date, compute the Monday that is exactly 11 weeks before it. */
+/** Given a race date, compute the Monday that is exactly 12 weeks before it. */
 export function raceDateToPlanStart(raceDate: string): string {
   if (!raceDate) return ''
   const [y, m, d] = raceDate.split('-').map(Number)
   const race = new Date(y, m - 1, d)
-  // 77 days before race = Week 1 Monday (plan is exactly 11 weeks)
-  const approxStart = new Date(race.getTime() - 77 * 86400000)
+  // 84 days before race = Week 1 Monday (plan is exactly 12 weeks)
+  const approxStart = new Date(race.getTime() - 84 * 86400000)
   // Snap back to Monday (JS getDay: 0=Sun, 1=Mon … 6=Sat)
   const dow = approxStart.getDay()
   const daysBack = dow === 0 ? 6 : dow - 1
