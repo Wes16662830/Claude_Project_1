@@ -11,7 +11,7 @@ import { loadProfile, saveProfile, type Profile } from './data/profile'
 import { fmtTime } from './data/raceData'
 import {
   loadCompleted, saveCompleted, loadPartner, savePartner,
-  decodeSnapshot, type PartnerSnapshot,
+  loadNotes, saveNotes, decodeSnapshot, type PartnerSnapshot,
 } from './data/progress'
 
 function UpdateBanner() {
@@ -43,6 +43,7 @@ export default function App() {
   const [profile, setProfileState] = useState<Profile>(() => loadProfile())
   const [completed, setCompletedState] = useState<Set<string>>(() => loadCompleted())
   const [partner, setPartnerState] = useState<PartnerSnapshot | null>(() => loadPartner())
+  const [notes, setNotesState] = useState<Record<string, string>>(() => loadNotes())
 
   const setProfile = (p: Profile) => { setProfileState(p); saveProfile(p) }
   const setCompleted = (ids: Set<string>) => { setCompletedState(ids); saveCompleted(ids) }
@@ -73,6 +74,16 @@ export default function App() {
     })
   }
 
+  const setNote = (sessionId: string, text: string) => {
+    setNotesState(prev => {
+      const next = { ...prev }
+      if (text.trim()) next[sessionId] = text
+      else delete next[sessionId]
+      saveNotes(next)
+      return next
+    })
+  }
+
   // Parse ?partner= URL param on first load
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -99,9 +110,9 @@ export default function App() {
       <UpdateBanner />
       <Header activeTab={tab} onTabChange={setTab} profile={profile} partner={partner} />
       <main>
-        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} onSetWorkoutMode={setWorkoutMode} />}
+        {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} onSetWorkoutMode={setWorkoutMode} notes={notes} onSetNote={setNote} />}
         {tab === 'dashboard' && <Dashboard profile={profile} />}
-        {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} />}
+        {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} notes={notes} onSetNote={setNote} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}
         {tab === 'partner'   && <Partner profile={profile} completed={completed} partner={partner} onSetPartner={setPartner} />}
         {tab === 'settings'  && <Settings profile={profile} setProfile={setProfile} />}

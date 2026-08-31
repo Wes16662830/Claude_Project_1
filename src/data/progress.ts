@@ -2,6 +2,7 @@
 
 const PROGRESS_KEY = 'hyrox-progress-v1'
 const PARTNER_KEY  = 'hyrox-partner-v1'
+const NOTES_KEY    = 'hyrox-notes-v1'
 
 // ---------------------------------------------------------------------------
 // Your own completed sessions
@@ -16,6 +17,22 @@ export function loadCompleted(): Set<string> {
 export function saveCompleted(ids: Set<string>): void {
   try {
     localStorage.setItem(PROGRESS_KEY, JSON.stringify([...ids]))
+  } catch {}
+}
+
+// ---------------------------------------------------------------------------
+// Per-session workout notes — keyed by sessionId (e.g. "w5_d3")
+// ---------------------------------------------------------------------------
+export function loadNotes(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(NOTES_KEY)
+    return raw ? (JSON.parse(raw) as Record<string, string>) : {}
+  } catch { return {} }
+}
+
+export function saveNotes(notes: Record<string, string>): void {
+  try {
+    localStorage.setItem(NOTES_KEY, JSON.stringify(notes))
   } catch {}
 }
 

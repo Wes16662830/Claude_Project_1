@@ -11,6 +11,7 @@ import {
 } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
 import { fmtTime } from '../data/raceData'
+import NoteBox from './NoteBox'
 
 const ALL_STATIONS: StationId[] = [
   'skierg', 'sled_push', 'sled_pull', 'bbj', 'row', 'farmers', 's_lunges', 'wall_balls',
@@ -75,9 +76,11 @@ interface Props {
   profile: Profile
   completed: Set<string>
   onToggleComplete: (id: string) => void
+  notes: Record<string, string>
+  onSetNote: (sessionId: string, text: string) => void
 }
 
-export default function TrainingPlan({ profile, completed, onToggleComplete }: Props) {
+export default function TrainingPlan({ profile, completed, onToggleComplete, notes, onSetNote }: Props) {
   // Compute current plan week from dates
   const currentWeekNum = (() => {
     if (!profile.planStartDate) return null
@@ -569,6 +572,13 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                           borderTop: '1px solid #1a1a1a', paddingTop: 8,
                         }}>
                           {fillTemplate(SESSION_MOTIVATION[sessionId], profile)}
+                        </div>
+                      )}
+
+                      {/* Per-session note — review or edit past workouts */}
+                      {!isRest && (
+                        <div style={{ marginTop: 8 }}>
+                          <NoteBox compact value={notes[sessionId] ?? ''} onSave={t => onSetNote(sessionId, t)} />
                         </div>
                       )}
                     </div>

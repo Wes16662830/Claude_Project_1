@@ -3,6 +3,7 @@ import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '.
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay, resolveWorkoutMode, fillTemplate } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
+import NoteBox from './NoteBox'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
 
@@ -104,6 +105,8 @@ interface Props {
   onToggleComplete: (id: string) => void
   onSetDayMode: (sessionId: string, mode: 'hyrox' | 'strength' | null) => void
   onSetWorkoutMode: (mode: 'hyrox' | 'strength') => void
+  notes: Record<string, string>
+  onSetNote: (sessionId: string, text: string) => void
 }
 
 // Always-visible training-style switcher for the top of the Today page.
@@ -399,7 +402,7 @@ function TimerDisplay({ mode, accentColor }: TDisplayProps) {
 
 // ─── Main Today Component ────────────────────────────────────────────────────
 
-export default function Today({ profile, completed, onToggleComplete, onSetDayMode, onSetWorkoutMode }: Props) {
+export default function Today({ profile, completed, onToggleComplete, onSetDayMode, onSetWorkoutMode, notes, onSetNote }: Props) {
   const globalMode = profile.workoutMode ?? 'hyrox'
   const pos = getPlanPos(profile.planStartDate, profile.restDays ?? [2, 4])
 
@@ -603,6 +606,9 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
           >
             {isDone ? '✓ Marked Done — tap to undo' : '✓ Mark Session Complete'}
           </button>
+
+          {/* Post-workout notes */}
+          <NoteBox value={notes[sessionId] ?? ''} onSave={text => onSetNote(sessionId, text)} />
         </>
       )}
     </div>
