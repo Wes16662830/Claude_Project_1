@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '../data/trainingPlan'
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
-import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay, resolveWorkoutMode } from '../data/profile'
+import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay, resolveWorkoutMode, fillTemplate } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
@@ -504,7 +504,7 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
   const isRace = rawType === 'race'
   const colors = SESSION_COLORS[type]
   const isDone = completed.has(sessionId)
-  const motivation = useStrength ? '' : (SESSION_MOTIVATION[sessionId] ?? '')
+  const motivation = useStrength ? '' : fillTemplate(SESSION_MOTIVATION[sessionId] ?? '', profile)
   const isSolo = profile.trainingMode === 'solo'
   const notesText = !useStrength && isSolo && session.soloNotes ? session.soloNotes : session.notes
   const timerMode = detectTimer(session.format, session.title, session.type)

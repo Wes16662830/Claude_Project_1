@@ -49,7 +49,6 @@ export const SA_FIELD_LADDER: FieldReference[] = [
   { label: 'CT Pro Doubles Winner',  seconds: 51 * 60 + 58, note: 'Pienaar & Schoonbee · Cape Town 2026' },
   { label: 'CT Doubles Winner',      seconds: 54 * 60 + 55, note: 'Kamffer & Nel · Cape Town 2025 · 477 teams' },
   { label: 'SA Podium zone',         seconds: 58 * 60,      note: 'Top 3 in 35-39 at most SA events' },
-  { label: 'Your CT target',         seconds: 62 * 60,      note: 'Estimated top 3–5 in SA 35-39 (sea level)' },
   { label: 'Global top 10%',         seconds: 67 * 60,      note: 'Under 1:07 across all ages' },
 ]
 
@@ -57,7 +56,7 @@ export const SA_FIELD_LADDER: FieldReference[] = [
 export const MOTIVATION = {
   bigGap: [
     'The top SA teams aren\'t fitter — they\'re more efficient. Every line below is a few seconds you leave on the floor on race day.',
-    'A 1:02 at sea level puts you in the SA podium conversation for 35-39. That\'s not a dream — it\'s a training block away.',
+    'Your target puts you in the SA podium conversation for 35-39. That\'s not a dream — it\'s a training block away.',
   ],
   closing: [
     'You\'re one disciplined block from a PB. Hold race pace on the runs and the stations take care of themselves.',

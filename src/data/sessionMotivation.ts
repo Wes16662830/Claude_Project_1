@@ -71,7 +71,7 @@ export const SESSION_MOTIVATION: Record<string, string> = {
   'w10_d0': 'Neural primer — short, snappy, spring-loaded. Wake the nervous system without a drop of unnecessary fatigue.',
   'w10_d1': 'Race-pace primer. Sharp, not exhausting. Leave feeling fast — Saturday is the full sim.',
   'w10_d3': 'Race-pace 800s, fresher legs. Controlled. The fitness is banked; this keeps it awake.',
-  'w10_d5': 'Full race simulation. Race protocol, race loads, time every transition. This tells you exactly where you stand — 1:02 is in here.',
+  'w10_d5': 'Full race simulation. Race protocol, race loads, time every transition. This tells you exactly where you stand — {target} is in here.',
   'w10_d6': 'Very easy flush. Let the sim settle into fitness. Legs up tonight.',
 
   // ─── WEEK 11 — PRIME ──────────────────────────────────────────────────────
@@ -85,5 +85,5 @@ export const SESSION_MOTIVATION: Record<string, string> = {
   'w12_d0': 'Nothing hard this week. Let the legs freshen and the mind settle. The work is done.',
   'w12_d1': 'Not a workout — preparation. The pickups keep race-pace rhythm in the legs. Loose, easy, ready.',
   'w12_d3': 'Race preview — sharp, not worked. Prime the wall balls, lunges and burpees. Leave feeling fast.',
-  'w12_d6': 'JHB 2026 was 1:08:46. Twelve weeks point at 1:02. Wall balls unbroken, lunges smooth, burpees relentless, sub-30s transitions, run 8 is your sprint. Bring it home.',
+  'w12_d6': '{lastRace} was {lastFinish}. Twelve weeks point at {target}. Wall balls unbroken, lunges smooth, burpees relentless, sub-30s transitions, run 8 is your sprint. Bring it home.',
 }

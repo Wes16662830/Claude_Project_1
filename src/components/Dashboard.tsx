@@ -249,10 +249,13 @@ export default function Dashboard({ profile }: Props) {
           })}
         </div>
 
-        {/* Field ladder — where 1:02 sits */}
+        {/* Field ladder — reference results plus the user's own target */}
         <div style={{ marginTop: 18, paddingTop: 16, borderTop: '1px solid #1a1a1a' }}>
           <div style={{ fontSize: 12, fontWeight: 700, color: '#aaa', marginBottom: 12 }}>Where you'll stand — SA 35-39 ladder</div>
-          {SA_FIELD_LADDER.map(ref => {
+          {[
+            ...SA_FIELD_LADDER,
+            { label: `Your ${profile.nextRaceName || 'race'} target`, seconds: targetFinishSeconds, note: 'Your goal' },
+          ].sort((a, b) => a.seconds - b.seconds).map(ref => {
             const isYou = ref.label.startsWith('Your')
             const reached = lastFinishSeconds <= ref.seconds
             return (

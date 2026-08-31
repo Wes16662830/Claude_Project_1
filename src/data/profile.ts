@@ -1,6 +1,8 @@
 // Personalisation model — division, equipment, targets, athletes.
 // Drives the whole app and persists to localStorage.
 
+import { fmtTime } from './raceData'
+
 export type StationId =
   | 'running' | 'skierg' | 'sled_push' | 'sled_pull' | 'bbj'
   | 'row' | 'farmers' | 's_lunges' | 'wall_balls'
@@ -388,6 +390,21 @@ export function resolveWorkoutMode(
   sessionId: string,
 ): 'hyrox' | 'strength' {
   return profile.dayModeOverrides?.[sessionId] ?? profile.workoutMode ?? 'hyrox'
+}
+
+// ---------------------------------------------------------------------------
+// Copy templating — keeps motivation/copy in sync with the user's own settings
+// so nothing hardcodes a race name or target time.
+//   {nextRace} {lastRace} {target} {lastFinish} {athlete1} {athlete2}
+// ---------------------------------------------------------------------------
+export function fillTemplate(text: string, profile: Profile): string {
+  return text
+    .replace(/\{nextRace\}/g, profile.nextRaceName || 'your race')
+    .replace(/\{lastRace\}/g, profile.lastRaceName || 'your last race')
+    .replace(/\{target\}/g, fmtTime(profile.targetFinishSeconds))
+    .replace(/\{lastFinish\}/g, fmtTime(profile.lastFinishSeconds))
+    .replace(/\{athlete1\}/g, (profile.athlete1 || '').trim().split(' ')[0] || 'you')
+    .replace(/\{athlete2\}/g, (profile.athlete2 || '').trim().split(' ')[0] || 'your partner')
 }
 
 // ---------------------------------------------------------------------------

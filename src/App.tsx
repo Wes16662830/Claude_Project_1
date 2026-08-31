@@ -8,6 +8,7 @@ import Settings from './components/Settings'
 import Partner from './components/Partner'
 import Today from './components/Today'
 import { loadProfile, saveProfile, type Profile } from './data/profile'
+import { fmtTime } from './data/raceData'
 import {
   loadCompleted, saveCompleted, loadPartner, savePartner,
   decodeSnapshot, type PartnerSnapshot,
@@ -84,6 +85,14 @@ export default function App() {
   }, [])
 
   useEffect(() => { saveProfile(profile) }, [profile])
+
+  // Keep the browser tab title in sync with the user's own race + target
+  useEffect(() => {
+    const race = profile.nextRaceName?.trim()
+    document.title = race
+      ? `Hyrox — ${fmtTime(profile.targetFinishSeconds)} ${race}`
+      : 'Hyrox Doubles Trainer'
+  }, [profile.nextRaceName, profile.targetFinishSeconds])
 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0a0a' }}>

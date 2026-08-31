@@ -6,7 +6,7 @@ import {
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import {
   resolveStation, getDivision, getFitnessLevel, resolveLoads, STATION_LABELS, weeksUntilRace,
-  mapCalendarDayToPlanDay, PLAN_REST_DAYS,
+  mapCalendarDayToPlanDay, PLAN_REST_DAYS, fillTemplate,
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
@@ -568,7 +568,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete }: P
                           fontStyle: 'italic', lineHeight: 1.5,
                           borderTop: '1px solid #1a1a1a', paddingTop: 8,
                         }}>
-                          {SESSION_MOTIVATION[sessionId]}
+                          {fillTemplate(SESSION_MOTIVATION[sessionId], profile)}
                         </div>
                       )}
                     </div>
