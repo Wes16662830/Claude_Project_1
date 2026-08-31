@@ -13,6 +13,7 @@ interface HeaderProps {
 const TABS = [
   { id: 'today',    label: 'Today' },
   { id: 'plan',     label: 'Training Plan' },
+  { id: 'notes',    label: 'Notes' },
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'analysis', label: 'Split Analysis' },
   { id: 'partner',  label: 'Partner' },

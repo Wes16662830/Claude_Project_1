@@ -407,6 +407,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
                   )
                   const sessionId = `w${week.week}_d${dayIdx}`
                   const isDone = completed.has(sessionId)
+                  const hasNote = (notes[sessionId] ?? '').trim().length > 0
 
                   return (
                     <div key={calDay} style={{
@@ -421,6 +422,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
                           <div style={{ fontSize: 11, fontWeight: 700, color: '#888', letterSpacing: '0.8px', textTransform: 'uppercase', marginTop: 2 }}>
                             {['Mon','Tue','Wed','Thu','Fri','Sat','Sun'][calDay]}
                           </div>
+                          {hasNote && <span title="Has a note" style={{ fontSize: 11, marginTop: 1 }}>📝</span>}
                           {!isRest && (
                             <button
                               onClick={() => onToggleComplete(sessionId)}

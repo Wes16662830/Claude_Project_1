@@ -7,6 +7,7 @@ import SplitAnalysis from './components/SplitAnalysis'
 import Settings from './components/Settings'
 import Partner from './components/Partner'
 import Today from './components/Today'
+import Notes from './components/Notes'
 import { loadProfile, saveProfile, type Profile } from './data/profile'
 import { fmtTime } from './data/raceData'
 import {
@@ -113,6 +114,7 @@ export default function App() {
         {tab === 'today'     && <Today profile={profile} completed={completed} onToggleComplete={toggleComplete} onSetDayMode={setDayMode} onSetWorkoutMode={setWorkoutMode} notes={notes} onSetNote={setNote} />}
         {tab === 'dashboard' && <Dashboard profile={profile} />}
         {tab === 'plan'      && <TrainingPlan profile={profile} completed={completed} onToggleComplete={toggleComplete} notes={notes} onSetNote={setNote} />}
+        {tab === 'notes'     && <Notes notes={notes} onSetNote={setNote} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}
         {tab === 'partner'   && <Partner profile={profile} completed={completed} partner={partner} onSetPartner={setPartner} />}
         {tab === 'settings'  && <Settings profile={profile} setProfile={setProfile} />}
