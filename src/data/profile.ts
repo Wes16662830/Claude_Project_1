@@ -308,6 +308,25 @@ export const getFitnessLevel = (id: FitnessLevel): FitnessLevelConfig =>
 // ---------------------------------------------------------------------------
 // Profile
 // ---------------------------------------------------------------------------
+
+// User-entered custom program (e.g. an Upper/Lower split). Stored only in
+// this device's localStorage — never shipped with the app.
+export interface CustomExercise {
+  name: string
+  sets: string
+  reps: string
+  rest?: string
+  notes?: string
+}
+export interface CustomDay {
+  name: string
+  exercises: CustomExercise[]
+}
+export interface CustomProgram {
+  name: string
+  days: CustomDay[]
+}
+
 export interface Profile {
   athlete1: string
   athlete2: string
@@ -324,8 +343,9 @@ export interface Profile {
   raceDate: string             // YYYY-MM-DD — the actual race day
   planStartDate: string        // YYYY-MM-DD — the Monday of Week 1 (auto-derived or manual)
   restDays: number[]           // day indexes (0=Mon … 6=Sun) the user wants as rest, e.g. [2,4]
-  workoutMode: 'hyrox' | 'strength'   // global default workout style
-  dayModeOverrides: Record<string, 'hyrox' | 'strength'>  // per-session overrides keyed by sessionId
+  workoutMode: 'hyrox' | 'strength' | 'custom'   // global default workout style
+  dayModeOverrides: Record<string, 'hyrox' | 'strength' | 'custom'>  // per-session overrides keyed by sessionId
+  customProgram: CustomProgram | null  // user-entered program (private to this device)
   customLoads: StationLoads | null  // null = use division defaults
 }
 
@@ -348,6 +368,7 @@ export const DEFAULT_PROFILE: Profile = {
   workoutMode: 'hyrox',
   dayModeOverrides: {},
   customLoads: null,
+  customProgram: null,
 }
 
 // ---------------------------------------------------------------------------
@@ -386,9 +407,9 @@ export function weeksUntilRace(raceDate: string): number | null {
 
 /** Effective workout style for a session: per-day override wins, else the global default. */
 export function resolveWorkoutMode(
-  profile: { workoutMode?: 'hyrox' | 'strength'; dayModeOverrides?: Record<string, 'hyrox' | 'strength'> },
+  profile: { workoutMode?: 'hyrox' | 'strength' | 'custom'; dayModeOverrides?: Record<string, 'hyrox' | 'strength' | 'custom'> },
   sessionId: string,
-): 'hyrox' | 'strength' {
+): 'hyrox' | 'strength' | 'custom' {
   return profile.dayModeOverrides?.[sessionId] ?? profile.workoutMode ?? 'hyrox'
 }
 

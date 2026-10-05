@@ -10,6 +10,7 @@ import {
   type Profile, type StationId, type ResolvedStation,
 } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
+import { customDayForSlot, customSessionFromDay } from '../data/customProgram'
 import { fmtTime } from '../data/raceData'
 import NoteBox from './NoteBox'
 
@@ -99,7 +100,9 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
   const fitness = getFitnessLevel(profile.fitnessLevel)
   const isSolo = division.athletes === 1
   const trainingAlone = profile.trainingMode === 'solo'
-  const strengthMode = (profile.workoutMode ?? 'hyrox') === 'strength'
+  const workoutMode = profile.workoutMode ?? 'hyrox'
+  const strengthMode = workoutMode === 'strength'
+  const customMode = workoutMode === 'custom' && !!profile.customProgram
 
   const runSegment = profile.segments.find(s => s.id === 'running')
   const targetPace = runSegment?.targetSeconds ?? 272
@@ -163,6 +166,21 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
           <div style={{ fontSize: 13, color: '#e8962a', lineHeight: 1.5 }}>
             <b>Strength (PPL) mode</b> — workout days show Push / Pull / Legs gym sessions instead of Hyrox work. Rest days and race day are unchanged. Switch back in Settings → Workout Mode.
           </div>
+        </div>
+      )}
+
+      {customMode && (
+        <div style={{ background: '#e8962a15', border: '1px solid #e8962a55', borderRadius: 12, padding: '14px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ fontSize: 18 }}>📋</span>
+          <div style={{ fontSize: 13, color: '#e8962a', lineHeight: 1.5 }}>
+            <b>Custom Program mode</b> — workout days show "{profile.customProgram?.name}" cycling across your training days. Rest days and race day are unchanged. Switch back in Settings → Workout Mode.
+          </div>
+        </div>
+      )}
+
+      {workoutMode === 'custom' && !profile.customProgram && (
+        <div style={{ background: '#1a1400', border: '1px solid #e8962a44', borderRadius: 12, padding: '14px 18px', marginBottom: 16, fontSize: 13, color: '#e8962a', lineHeight: 1.5 }}>
+          Custom Program mode is on but no program is set up — add one in <b>Settings → Custom Program</b>. Showing the Hyrox plan for now.
         </div>
       )}
 
@@ -385,10 +403,16 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
                   const planS = d.session
                   const planIsRest = planS.type === 'rest'
                   const planIsRace = (planS.type as string) === 'race'
-                  // Global strength mode swaps workout days (never rest/race) for PPL gym sessions
-                  const useStrength = strengthMode && !planIsRest && !planIsRace
+                  const isWorkoutDay = !planIsRest && !planIsRace
+                  // Global mode swaps workout days (never rest/race) for PPL or custom sessions
+                  const slotIdx = planWorkoutSlot(planIdx)
+                  const custDay = customMode && profile.customProgram ? customDayForSlot(profile.customProgram, week.week, slotIdx) : null
+                  const useStrength = strengthMode && isWorkoutDay
+                  const useCustom = customMode && isWorkoutDay && !!custDay && !!profile.customProgram
                   const s = useStrength
-                    ? getStrengthSession(week.week, planWorkoutSlot(planIdx), profile.fitnessLevel)
+                    ? getStrengthSession(week.week, slotIdx, profile.fitnessLevel)
+                    : useCustom && custDay && profile.customProgram
+                    ? customSessionFromDay(profile.customProgram, custDay)
                     : planS
                   const rawType = s.type as string
                   const type: SessionType = rawType === 'race' ? 'sim' : s.type
@@ -399,7 +423,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
                     .filter(r => r.status !== 'native')
 
                   const isRunSession = s.type === 'run'
-                  const showScaling = !isRest && !useStrength && fitness.id !== 'advanced'
+                  const showScaling = !isRest && !useStrength && !useCustom && fitness.id !== 'advanced'
                   const showZones = isRunSession && !isRest
                   const zoneInfo = isRunSession ? sessionPaceInfo(s) : null
                   const hasStationLoads = !isRunSession && (s.stations ?? []).some(
@@ -567,7 +591,7 @@ export default function TrainingPlan({ profile, completed, onToggleComplete, not
                       })()}
 
                       {/* Session motivation */}
-                      {!useStrength && SESSION_MOTIVATION[sessionId] && (
+                      {!useStrength && !useCustom && SESSION_MOTIVATION[sessionId] && (
                         <div style={{
                           marginTop: 8, fontSize: 11, color: '#e8c12a',
                           fontStyle: 'italic', lineHeight: 1.5,

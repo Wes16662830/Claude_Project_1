@@ -5,6 +5,7 @@ import {
   raceDateToPlanStart, weeksUntilRace,
   type Profile, type EquipmentId, type Equipment, type FitnessLevel, type StationLoads,
 } from '../data/profile'
+import CustomProgramEditor from './CustomProgramEditor'
 
 const card: React.CSSProperties = {
   background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '20px 24px',
@@ -72,9 +73,10 @@ const GROUP_LABELS: Record<Equipment['group'], string> = {
 interface Props {
   profile: Profile
   setProfile: (p: Profile) => void
+  onSetCustomProgram: (program: Profile['customProgram']) => void
 }
 
-export default function Settings({ profile, setProfile }: Props) {
+export default function Settings({ profile, setProfile, onSetCustomProgram }: Props) {
   const update = (patch: Partial<Profile>) => setProfile({ ...profile, ...patch })
   const division = getDivision(profile.division)
 
@@ -160,15 +162,16 @@ export default function Settings({ profile, setProfile }: Props) {
         <div style={{ fontSize: 12, color: '#666', marginBottom: 16 }}>
           Choose your default training style. Switch any single day on the Today tab without changing this default.
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {([
             { id: 'hyrox',    emoji: '🏃', label: 'Hyrox Hybrid', desc: 'The 12-week race plan — runs, stations, compromised bricks and sims.' },
             { id: 'strength', emoji: '🏋️', label: 'Strength (PPL)', desc: 'Full gym sessions on a Push / Pull / Legs split. Pure lifting, no Hyrox stations.' },
+            { id: 'custom',   emoji: '📋', label: 'Custom Program', desc: 'Your own program — enter it below and it cycles across your training days.' },
           ] as const).map(({ id, emoji, label, desc }) => {
             const sel = (profile.workoutMode ?? 'hyrox') === id
             return (
               <button key={id} onClick={() => update({ workoutMode: id })} style={{
-                flex: 1, padding: '12px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                flex: '1 1 30%', minWidth: 150, padding: '12px 14px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
                 border: `1px solid ${sel ? '#e8962a' : '#2a2a2a'}`,
                 background: sel ? '#e8962a18' : '#0a0a0a',
                 color: sel ? '#e8962a' : '#888', fontWeight: sel ? 600 : 400,
@@ -185,6 +188,9 @@ export default function Settings({ profile, setProfile }: Props) {
           })}
         </div>
       </div>
+
+      {/* Custom program editor */}
+      <CustomProgramEditor profile={profile} onSetCustomProgram={onSetCustomProgram} />
 
       {/* Races & targets */}
       <div style={card}>

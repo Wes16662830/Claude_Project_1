@@ -3,6 +3,7 @@ import { TRAINING_PLAN, SESSION_COLORS, PHASE_COLORS, type SessionType } from '.
 import { SESSION_MOTIVATION } from '../data/sessionMotivation'
 import { type Profile, weeksUntilRace, mapCalendarDayToPlanDay, resolveWorkoutMode, fillTemplate } from '../data/profile'
 import { getStrengthSession, planWorkoutSlot } from '../data/strengthPlan'
+import { customDayForSlot, customSessionFromDay } from '../data/customProgram'
 import NoteBox from './NoteBox'
 
 // ─── Beep + vibrate on phase changes ────────────────────────────────────────
@@ -103,19 +104,21 @@ interface Props {
   profile: Profile
   completed: Set<string>
   onToggleComplete: (id: string) => void
-  onSetDayMode: (sessionId: string, mode: 'hyrox' | 'strength' | null) => void
-  onSetWorkoutMode: (mode: 'hyrox' | 'strength') => void
+  onSetDayMode: (sessionId: string, mode: 'hyrox' | 'strength' | 'custom' | null) => void
+  onSetWorkoutMode: (mode: 'hyrox' | 'strength' | 'custom') => void
   notes: Record<string, string>
   onSetNote: (sessionId: string, text: string) => void
 }
 
 // Always-visible training-style switcher for the top of the Today page.
-function ModeSwitch({ mode, onChange }: { mode: 'hyrox' | 'strength'; onChange: (m: 'hyrox' | 'strength') => void }) {
+type Mode = 'hyrox' | 'strength' | 'custom'
+function ModeSwitch({ mode, onChange }: { mode: Mode; onChange: (m: Mode) => void }) {
   return (
     <div style={{ display: 'flex', gap: 6, background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: 6 }}>
       {([
-        { id: 'hyrox',    label: '🏃 Hyrox Hybrid' },
+        { id: 'hyrox',    label: '🏃 Hyrox' },
         { id: 'strength', label: '🏋️ Strength' },
+        { id: 'custom',   label: '📋 Custom' },
       ] as const).map(({ id, label }) => {
         const sel = mode === id
         return (
@@ -123,7 +126,7 @@ function ModeSwitch({ mode, onChange }: { mode: 'hyrox' | 'strength'; onChange: 
             key={id}
             onClick={() => onChange(id)}
             style={{
-              flex: 1, padding: '10px 12px', borderRadius: 8, fontSize: 13, fontWeight: sel ? 700 : 500,
+              flex: 1, padding: '10px 8px', borderRadius: 8, fontSize: 13, fontWeight: sel ? 700 : 500,
               cursor: 'pointer', border: 'none',
               background: sel ? '#e8962a' : 'transparent',
               color: sel ? '#000' : '#888', transition: 'all 0.12s',
@@ -494,11 +497,19 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
   const planIsRace = (planSession.type as string) === 'race'
   const sessionId = `w${pos.weekNum}_d${pos.planDayIndex}`
 
-  // Strength override: swap the Hyrox session for a PPL gym day (never on rest/race days)
+  // Mode override: swap the Hyrox session for a PPL gym day or the user's
+  // custom program (never on rest/race days).
   const mode = resolveWorkoutMode(profile, sessionId)
-  const useStrength = mode === 'strength' && !planIsRest && !planIsRace
+  const isWorkoutDay = !planIsRest && !planIsRace
+  const slot = planWorkoutSlot(pos.planDayIndex)
+  const customDay = profile.customProgram ? customDayForSlot(profile.customProgram, pos.weekNum, slot) : null
+
+  const useStrength = mode === 'strength' && isWorkoutDay
+  const useCustom = mode === 'custom' && isWorkoutDay && !!customDay
   const session = useStrength
-    ? getStrengthSession(pos.weekNum, planWorkoutSlot(pos.planDayIndex), profile.fitnessLevel)
+    ? getStrengthSession(pos.weekNum, slot, profile.fitnessLevel)
+    : useCustom && customDay && profile.customProgram
+    ? customSessionFromDay(profile.customProgram, customDay)
     : planSession
 
   const rawType = session.type as string
@@ -507,9 +518,9 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
   const isRace = rawType === 'race'
   const colors = SESSION_COLORS[type]
   const isDone = completed.has(sessionId)
-  const motivation = useStrength ? '' : fillTemplate(SESSION_MOTIVATION[sessionId] ?? '', profile)
+  const motivation = (useStrength || useCustom) ? '' : fillTemplate(SESSION_MOTIVATION[sessionId] ?? '', profile)
   const isSolo = profile.trainingMode === 'solo'
-  const notesText = !useStrength && isSolo && session.soloNotes ? session.soloNotes : session.notes
+  const notesText = !useStrength && !useCustom && isSolo && session.soloNotes ? session.soloNotes : session.notes
   const timerMode = detectTimer(session.format, session.title, session.type)
 
   const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -520,6 +531,12 @@ export default function Today({ profile, completed, onToggleComplete, onSetDayMo
 
       {/* Quick training-style switch — always visible */}
       <ModeSwitch mode={mode} onChange={m => { onSetWorkoutMode(m); onSetDayMode(sessionId, null) }} />
+
+      {mode === 'custom' && isWorkoutDay && !customDay && (
+        <div style={{ background: '#1a1400', border: '1px solid #e8962a44', borderRadius: 10, padding: '10px 14px', fontSize: 12, color: '#e8962a', lineHeight: 1.5 }}>
+          No custom program set up yet — add one in <b>Settings → Custom Program</b>. Showing the Hyrox session for now.
+        </div>
+      )}
 
       {/* Rest day */}
       {isRest ? (

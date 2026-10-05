@@ -56,7 +56,7 @@ export default function App() {
     setCompleted(next)
   }
 
-  const setDayMode = (sessionId: string, mode: 'hyrox' | 'strength' | null) => {
+  const setDayMode = (sessionId: string, mode: 'hyrox' | 'strength' | 'custom' | null) => {
     setProfileState(prev => {
       const next = { ...(prev.dayModeOverrides ?? {}) }
       if (mode === null) delete next[sessionId]
@@ -67,9 +67,17 @@ export default function App() {
     })
   }
 
-  const setWorkoutMode = (mode: 'hyrox' | 'strength') => {
+  const setWorkoutMode = (mode: 'hyrox' | 'strength' | 'custom') => {
     setProfileState(prev => {
       const p = { ...prev, workoutMode: mode }
+      saveProfile(p)
+      return p
+    })
+  }
+
+  const setCustomProgram = (program: Profile['customProgram']) => {
+    setProfileState(prev => {
+      const p = { ...prev, customProgram: program }
       saveProfile(p)
       return p
     })
@@ -117,7 +125,7 @@ export default function App() {
         {tab === 'notes'     && <Notes notes={notes} onSetNote={setNote} />}
         {tab === 'analysis'  && <SplitAnalysis profile={profile} />}
         {tab === 'partner'   && <Partner profile={profile} completed={completed} partner={partner} onSetPartner={setPartner} />}
-        {tab === 'settings'  && <Settings profile={profile} setProfile={setProfile} />}
+        {tab === 'settings'  && <Settings profile={profile} setProfile={setProfile} onSetCustomProgram={setCustomProgram} />}
       </main>
     </div>
   )
