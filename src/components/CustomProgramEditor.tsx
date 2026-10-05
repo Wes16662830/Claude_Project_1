@@ -1,6 +1,6 @@
 import { useState, type CSSProperties } from 'react'
 import { type Profile, type CustomProgram, type CustomDay, type CustomExercise } from '../data/profile'
-import { upperLowerTemplate, parseProgramText } from '../data/customProgram'
+import { upperLowerTemplate, parseProgramText, encodeProgram, decodeProgram } from '../data/customProgram'
 
 const card: CSSProperties = {
   background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '20px 24px',
@@ -60,6 +60,67 @@ function ImportBox({ onImport, label }: { onImport: (text: string) => void; labe
   )
 }
 
+// Import a program-transfer code created on another device.
+function ImportCodeBox({ onImport }: { onImport: (code: string) => boolean }) {
+  const [open, setOpen] = useState(false)
+  const [code, setCode] = useState('')
+  const [err, setErr] = useState(false)
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} style={{ ...smallBtn, borderColor: '#a855f755', color: '#a855f7' }}>
+        ⬇ Import code
+      </button>
+    )
+  }
+  return (
+    <div style={{ width: '100%', marginTop: 10 }}>
+      <textarea
+        value={code}
+        onChange={e => { setCode(e.target.value); setErr(false) }}
+        placeholder="Paste the code you exported on your other device…"
+        rows={4}
+        style={{ ...input, width: '100%', fontFamily: 'ui-monospace, monospace', wordBreak: 'break-all' }}
+      />
+      {err && <div style={{ fontSize: 11, color: '#d63b2f', margin: '6px 0' }}>That code didn’t read as a program. Copy the whole thing and try again.</div>}
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <button
+          onClick={() => { if (onImport(code)) { setCode(''); setOpen(false) } else setErr(true) }}
+          style={{ ...smallBtn, borderColor: '#2a8c5a', color: '#2a8c5a' }}
+        >
+          Load
+        </button>
+        <button onClick={() => { setCode(''); setErr(false); setOpen(false) }} style={smallBtn}>Cancel</button>
+      </div>
+    </div>
+  )
+}
+
+// Reveal a transfer code for the current program, with copy-to-clipboard.
+function ExportBox({ program }: { program: CustomProgram }) {
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState(false)
+  const code = encodeProgram(program)
+  if (!open) {
+    return <button onClick={() => setOpen(true)} style={{ ...smallBtn, borderColor: '#a855f755', color: '#a855f7' }}>⬆ Export code</button>
+  }
+  return (
+    <div style={{ width: '100%', marginTop: 10 }}>
+      <div style={{ fontSize: 11, color: '#666', marginBottom: 6 }}>Copy this and paste it via “Import code” on your other device.</div>
+      <textarea readOnly value={code} rows={4} onFocus={e => e.currentTarget.select()}
+        style={{ ...input, width: '100%', fontFamily: 'ui-monospace, monospace', wordBreak: 'break-all' }} />
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <button
+          onClick={async () => { try { await navigator.clipboard.writeText(code); setCopied(true); setTimeout(() => setCopied(false), 1500) } catch { /* select-and-copy fallback */ } }}
+          style={{ ...smallBtn, borderColor: '#2a8c5a', color: '#2a8c5a' }}
+        >
+          {copied ? '✓ Copied' : 'Copy code'}
+        </button>
+        <button onClick={() => setOpen(false)} style={smallBtn}>Done</button>
+      </div>
+    </div>
+  )
+}
+
 export default function CustomProgramEditor({ profile, onSetCustomProgram }: Props) {
   const program = profile.customProgram
 
@@ -75,6 +136,7 @@ export default function CustomProgramEditor({ profile, onSetCustomProgram }: Pro
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
           <ImportBox label="Paste my program" onImport={t => commit(parseProgramText(t))} />
+          <ImportCodeBox onImport={code => { const p = decodeProgram(code); if (p) { commit(p); return true } return false }} />
           <button
             onClick={() => commit(upperLowerTemplate())}
             style={{ ...smallBtn, borderColor: '#e8962a', color: '#e8962a' }}
@@ -130,6 +192,12 @@ export default function CustomProgramEditor({ profile, onSetCustomProgram }: Pro
       <div style={{ fontSize: 12, color: '#666', marginBottom: 14, lineHeight: 1.6 }}>
         Saved only on this device. Days cycle across your training days (Mon/Tue/Thu/Sat/Sun). Select
         <b style={{ color: '#e8962a' }}> Custom Program</b> in Workout Mode to use it.
+      </div>
+
+      {/* Move between your own devices */}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start', marginBottom: 18 }}>
+        <ExportBox program={program} />
+        <ImportCodeBox onImport={code => { const p = decodeProgram(code); if (p) { commit(p); return true } return false }} />
       </div>
 
       <label style={{ fontSize: 11, color: '#888', textTransform: 'uppercase', letterSpacing: '0.6px' }}>Program name</label>

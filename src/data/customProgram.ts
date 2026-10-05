@@ -67,6 +67,20 @@ export function parseProgramText(text: string, programName = 'My Program'): Cust
   return { name: programName, days }
 }
 
+// Share a program between your own devices via a copy-paste code.
+// Unicode-safe (encodeURIComponent before btoa), same scheme as partner codes.
+export function encodeProgram(program: CustomProgram): string {
+  try { return btoa(encodeURIComponent(JSON.stringify(program))) } catch { return '' }
+}
+
+export function decodeProgram(code: string): CustomProgram | null {
+  try {
+    const p = JSON.parse(decodeURIComponent(atob(code.trim()))) as CustomProgram
+    if (p && typeof p.name === 'string' && Array.isArray(p.days)) return p
+    return null
+  } catch { return null }
+}
+
 // A blank Upper/Lower scaffold the user can fill from their own program.
 export function upperLowerTemplate(): CustomProgram {
   const blank = (name: string): CustomDay => ({
