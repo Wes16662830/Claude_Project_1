@@ -14,7 +14,9 @@ export function customDayForSlot(program: CustomProgram, weekNum: number, slot: 
 }
 
 export function customSessionFromDay(program: CustomProgram, day: CustomDay): TrainingSession {
-  const detail = day.exercises.length
+  const detail = (day.raw !== undefined && day.raw.trim())
+    ? day.raw.trim()
+    : day.exercises.length
     ? day.exercises.map(e => {
         const sr = [e.sets, e.reps].filter(Boolean).join(' × ')
         const rest = e.rest ? ` · rest ${e.rest}` : ''
@@ -32,6 +34,37 @@ export function customSessionFromDay(program: CustomProgram, day: CustomDay): Tr
     notes: '',
     stations: [],
   }
+}
+
+// Parse pasted program text into days. A short line that looks like a day
+// heading starts a new day; everything under it is kept verbatim as `raw`,
+// so all the detail (muscles, sets, reps, cues) is preserved exactly.
+export function parseProgramText(text: string, programName = 'My Program'): CustomProgram {
+  const headerRe = /^(day\b.*|upper\b.*|lower\b.*|push\b.*|pull\b.*|legs?\b.*|full[- ]?body.*|workout\b.*|session\b.*|week\s*\d+.*|[a-d]\)?\s*(upper|lower|push|pull|legs).*)$/i
+  const lines = text.replace(/\r/g, '').split('\n')
+  const days: CustomDay[] = []
+  let current: CustomDay | null = null
+  let buf: string[] = []
+  const flush = () => {
+    if (current) { current.raw = buf.join('\n').trim(); days.push(current) }
+    buf = []
+  }
+  for (const line of lines) {
+    const t = line.trim()
+    const isHeader = t.length > 0 && t.length <= 40 && headerRe.test(t)
+    if (isHeader) {
+      flush()
+      current = { name: t, exercises: [], raw: '' }
+    } else if (current) {
+      buf.push(line)
+    } else if (t) {
+      current = { name: 'Day 1', exercises: [], raw: '' }
+      buf.push(line)
+    }
+  }
+  flush()
+  if (!days.length) days.push({ name: 'Day 1', exercises: [], raw: text.trim() })
+  return { name: programName, days }
 }
 
 // A blank Upper/Lower scaffold the user can fill from their own program.

@@ -1,6 +1,6 @@
-import type { CSSProperties } from 'react'
+import { useState, type CSSProperties } from 'react'
 import { type Profile, type CustomProgram, type CustomDay, type CustomExercise } from '../data/profile'
-import { upperLowerTemplate } from '../data/customProgram'
+import { upperLowerTemplate, parseProgramText } from '../data/customProgram'
 
 const card: CSSProperties = {
   background: '#111', border: '1px solid #1e1e1e', borderRadius: 12, padding: '20px 24px',
@@ -23,6 +23,43 @@ interface Props {
   onSetCustomProgram: (program: CustomProgram | null) => void
 }
 
+// Paste-to-import: user pastes their own program text; it parses into days,
+// keeping every detail verbatim. Content stays on the device.
+function ImportBox({ onImport, label }: { onImport: (text: string) => void; label: string }) {
+  const [open, setOpen] = useState(false)
+  const [text, setText] = useState('')
+  if (!open) {
+    return (
+      <button onClick={() => setOpen(true)} style={{ ...smallBtn, borderColor: '#4a9fd455', color: '#4a9fd4' }}>
+        📋 {label}
+      </button>
+    )
+  }
+  return (
+    <div style={{ width: '100%', marginTop: 10 }}>
+      <textarea
+        value={text}
+        onChange={e => setText(e.target.value)}
+        placeholder={'Paste your program here — e.g.\n\nUpper A\nBench Press  3 x 6-8  (chest, triceps)  rest 2-3m\nPull-up  3 x 8-10  (back, biceps)\n…\n\nLower A\nSquat  3 x 5  (quads, glutes)\n…'}
+        rows={10}
+        style={{ ...input, width: '100%', fontFamily: 'ui-monospace, monospace', lineHeight: 1.5, whiteSpace: 'pre' }}
+      />
+      <div style={{ fontSize: 11, color: '#666', margin: '6px 0 10px', lineHeight: 1.5 }}>
+        A short line like “Upper A”, “Lower B”, “Day 1” starts a new day; everything under it is kept exactly as pasted. You can tidy any day afterwards.
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}>
+        <button
+          onClick={() => { if (text.trim()) { onImport(text); setText(''); setOpen(false) } }}
+          style={{ ...smallBtn, borderColor: '#2a8c5a', color: '#2a8c5a' }}
+        >
+          Import
+        </button>
+        <button onClick={() => { setText(''); setOpen(false) }} style={smallBtn}>Cancel</button>
+      </div>
+    </div>
+  )
+}
+
 export default function CustomProgramEditor({ profile, onSetCustomProgram }: Props) {
   const program = profile.customProgram
 
@@ -33,15 +70,16 @@ export default function CustomProgramEditor({ profile, onSetCustomProgram }: Pro
       <div style={card}>
         <div style={sectionTitle}>Custom Program</div>
         <div style={{ fontSize: 12, color: '#666', marginBottom: 16, lineHeight: 1.6 }}>
-          Enter your own program (e.g. an Upper/Lower split). It saves only on this device — nothing is uploaded or shared.
-          Once added, select <b style={{ color: '#e8962a' }}>Custom Program</b> in Workout Mode and it cycles across your training days.
+          Load your own program (e.g. an Upper/Lower split). It saves only on this device — nothing is uploaded or shared.
+          The fastest way is to <b style={{ color: '#4a9fd4' }}>paste it from your own copy</b>. Once added, select <b style={{ color: '#e8962a' }}>Custom Program</b> in Workout Mode and it cycles across your training days.
         </div>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+          <ImportBox label="Paste my program" onImport={t => commit(parseProgramText(t))} />
           <button
             onClick={() => commit(upperLowerTemplate())}
             style={{ ...smallBtn, borderColor: '#e8962a', color: '#e8962a' }}
           >
-            + Start from Upper/Lower template
+            + Upper/Lower template
           </button>
           <button
             onClick={() => commit({ name: 'My Program', days: [{ name: 'Day 1', exercises: [{ name: '', sets: '', reps: '', rest: '', notes: '' }] }] })}
@@ -109,34 +147,53 @@ export default function CustomProgramEditor({ profile, onSetCustomProgram }: Pro
             <button onClick={() => removeDay(di)} style={{ ...smallBtn, borderColor: '#d63b2f44', color: '#d63b2f' }}>✕ Day</button>
           </div>
 
-          {/* Exercise header */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 60px 60px 24px', gap: 6, fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4, padding: '0 2px' }}>
-            <span>Exercise</span><span>Sets</span><span>Reps</span><span>Rest</span><span />
-          </div>
-
-          {day.exercises.map((ex, ei) => (
-            <div key={ei} style={{ marginBottom: 8 }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 60px 60px 24px', gap: 6, alignItems: 'center' }}>
-                <input style={input} value={ex.name} onChange={e => setExercise(di, ei, { ...ex, name: e.target.value })} placeholder="Exercise" />
-                <input style={{ ...input, textAlign: 'center' }} value={ex.sets} onChange={e => setExercise(di, ei, { ...ex, sets: e.target.value })} placeholder="3" />
-                <input style={{ ...input, textAlign: 'center' }} value={ex.reps} onChange={e => setExercise(di, ei, { ...ex, reps: e.target.value })} placeholder="8-10" />
-                <input style={{ ...input, textAlign: 'center' }} value={ex.rest ?? ''} onChange={e => setExercise(di, ei, { ...ex, rest: e.target.value })} placeholder="2m" />
-                <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: '#d63b2f', fontSize: 14, cursor: 'pointer', padding: 0 }}>✕</button>
+          {day.raw !== undefined ? (
+            // Imported / free-text day — editable block, keeps all detail verbatim
+            <textarea
+              value={day.raw}
+              onChange={e => setDay(di, { ...day, raw: e.target.value })}
+              rows={Math.min(14, Math.max(4, day.raw.split('\n').length + 1))}
+              style={{ ...input, width: '100%', fontFamily: 'ui-monospace, monospace', lineHeight: 1.6, whiteSpace: 'pre' }}
+              placeholder="Exercises, muscles, sets, reps, cues…"
+            />
+          ) : (
+            <>
+              {/* Exercise header */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 60px 60px 24px', gap: 6, fontSize: 10, color: '#555', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 4, padding: '0 2px' }}>
+                <span>Exercise</span><span>Sets</span><span>Reps</span><span>Rest</span><span />
               </div>
-              <input
-                style={{ ...input, width: '100%', marginTop: 4, fontSize: 12, color: '#999' }}
-                value={ex.notes ?? ''}
-                onChange={e => setExercise(di, ei, { ...ex, notes: e.target.value })}
-                placeholder="Notes (optional) — tempo, cues, superset…"
-              />
-            </div>
-          ))}
 
-          <button onClick={() => addExercise(di)} style={{ ...smallBtn, marginTop: 4 }}>+ Exercise</button>
+              {day.exercises.map((ex, ei) => (
+                <div key={ei} style={{ marginBottom: 8 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 60px 60px 24px', gap: 6, alignItems: 'center' }}>
+                    <input style={input} value={ex.name} onChange={e => setExercise(di, ei, { ...ex, name: e.target.value })} placeholder="Exercise" />
+                    <input style={{ ...input, textAlign: 'center' }} value={ex.sets} onChange={e => setExercise(di, ei, { ...ex, sets: e.target.value })} placeholder="3" />
+                    <input style={{ ...input, textAlign: 'center' }} value={ex.reps} onChange={e => setExercise(di, ei, { ...ex, reps: e.target.value })} placeholder="8-10" />
+                    <input style={{ ...input, textAlign: 'center' }} value={ex.rest ?? ''} onChange={e => setExercise(di, ei, { ...ex, rest: e.target.value })} placeholder="2m" />
+                    <button onClick={() => removeExercise(di, ei)} style={{ background: 'none', border: 'none', color: '#d63b2f', fontSize: 14, cursor: 'pointer', padding: 0 }}>✕</button>
+                  </div>
+                  <input
+                    style={{ ...input, width: '100%', marginTop: 4, fontSize: 12, color: '#999' }}
+                    value={ex.notes ?? ''}
+                    onChange={e => setExercise(di, ei, { ...ex, notes: e.target.value })}
+                    placeholder="Notes (optional) — tempo, cues, superset…"
+                  />
+                </div>
+              ))}
+
+              <button onClick={() => addExercise(di)} style={{ ...smallBtn, marginTop: 4 }}>+ Exercise</button>
+            </>
+          )}
         </div>
       ))}
 
-      <button onClick={addDay} style={{ ...smallBtn, borderColor: '#e8962a55', color: '#e8962a' }}>+ Add day</button>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+        <button onClick={addDay} style={{ ...smallBtn, borderColor: '#e8962a55', color: '#e8962a' }}>+ Add day</button>
+        <ImportBox label="Paste more days" onImport={t => {
+          const parsed = parseProgramText(t, program.name)
+          commit({ ...program, days: [...program.days, ...parsed.days] })
+        }} />
+      </div>
     </div>
   )
 }

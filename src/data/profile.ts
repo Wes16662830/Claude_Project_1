@@ -321,6 +321,7 @@ export interface CustomExercise {
 export interface CustomDay {
   name: string
   exercises: CustomExercise[]
+  raw?: string   // free-text block (e.g. pasted from the user's own program)
 }
 export interface CustomProgram {
   name: string
